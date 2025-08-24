@@ -6,7 +6,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 import HeroSection from '@/components/HeroSection';
 
-import Container from '@/components/ui/Container';
+
+// import AboutPage from '@/components/home/About';
+// import FeaturesSectionDemo from '@/components/home/Features';
+// import DemoPage from '@/components/home/Demos';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -29,10 +32,13 @@ export default function HomePage() {
   return (
   
     <>
-    <div className="pt-8 pb-16 sm:pb-24">
-        <Container>
+    <div className="pb-16 sm:pb-24">
+     
           <HeroSection />
-        </Container>
+          {/* <AboutPage/>
+          <FeaturesSectionDemo/>
+          <DemoPage/> */}
+       
       </div>
 
     

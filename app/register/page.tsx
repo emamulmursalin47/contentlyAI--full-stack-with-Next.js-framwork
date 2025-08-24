@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -7,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { BackgroundLines } from '@/components/ui/background-lines'; // Import BackgroundLines
-import { Card } from '@/components/ui/card'; // Import Card
-import { SiGoogle } from '@icons-pack/react-simple-icons'; // Import Google icon
+import { BackgroundLines } from '@/components/ui/background-lines';
+import { Card } from '@/components/ui/card';
+import { SiGoogle } from '@icons-pack/react-simple-icons';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,9 +21,16 @@ export default function RegisterPage() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
-  const { register, user, loading, signInWithGoogle } = useAuth(); // Destructure signInWithGoogle
+  const { register, user, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && user) {
@@ -32,29 +40,24 @@ export default function RegisterPage() {
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
-
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
-
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-
     return newErrors;
   };
 
@@ -66,10 +69,8 @@ export default function RegisterPage() {
       setErrors(validationErrors);
       return;
     }
-
     setErrors({});
     setIsLoading(true);
-
     try {
       const result = await register(formData.email, formData.password, formData.fullName);
       if (result.success) {
@@ -91,104 +92,259 @@ export default function RegisterPage() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  if (!mounted) return null;
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7950f2]"></div>
       </div>
     );
   }
 
   return (
-    <BackgroundLines className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-md w-full z-20 space-y-8 p-8"> {/* Use Card component */}
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Create your <span className="text-blue-600">Contently AI</span> account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Join Contently AI and start creating amazing content
-          </p>
-        </div>
-        
-        {/* Google Sign-up Button */}
-        <div className="mb-4">
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2"
-            onClick={() => signInWithGoogle()}
-          >
-            <SiGoogle className="h-5 w-5" /> Sign up with Google
-          </Button>
-        </div>
+    <BackgroundLines className="min-h-screen  bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
+      {/* Floating elements */}
+      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm"
+            style={{
+              width: `${Math.random() * 100 + 20}px`,
+              height: `${Math.random() * 100 + 20}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              x: [0, Math.random() * 100 - 50],
+              y: [0, Math.random() * 100 - 50],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div> */}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-sm text-red-800">{errors.submit}</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md  z-20 w-full"
+      >
+        <Card className="bg-[#302b63]/30 mt-20 backdrop-blur-sm border border-indigo-700/30 rounded-2xl shadow-xl p-8 relative overflow-hidden">
+          {/* Glow effect */}
+          <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#7950f2]/10 to-[#5f3dc4]/10"></div>
+            <div className="absolute inset-0 rounded-2xl shadow-[0_0_20px_5px_rgba(124,58,237,0.2)]"></div>
+          </div>
+
+          <div className="relative  z-10">
+            <div className="text-center  mb-8">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex  justify-center mb-4"
+              >
+                <Link href="/">
+          <div className="flex items-center justify-center h-16 w-32 rounded-2xl bg-transparent backdrop-blur-xl border border-white/20 cursor-pointer"
+            style={{
+              boxShadow: "0 4px 16px rgba(122, 28, 172, 0.3)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)"
+            }}
+          >
+           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-xl">Contently</span>
+              </div>
+          </div>
+        </Link>
+              </motion.div>
+              
+              <motion.h2 
+                className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                Create your <span className="text-[#9775fa]">Contently AI</span> account
+              </motion.h2>
+              
+              <motion.p 
+                className="mt-3 text-indigo-200"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                Join Contently AI and start creating amazing content
+              </motion.p>
             </div>
-          )}
-          
-          <div className="space-y-4">
-            <Label htmlFor="fullName">Full name</Label>
-            <Input
-              id="fullName"
-              type="text"
-              value={formData.fullName}
-              onChange={handleInputChange('fullName')}
-              placeholder="Enter your full name"
-            />
-            {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
             
-            <Label htmlFor="email">Email address</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              placeholder="Enter your email"
-            />
-            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-            
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              placeholder="Enter your password"
-            />
-            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
-            
-            <Label htmlFor="confirmPassword">Confirm password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleInputChange('confirmPassword')}
-              placeholder="Confirm your password"
-            />
-            {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
-          </div>
+            {/* Google Sign-up Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="mb-6"
+            >
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 bg-transparent border-indigo-600/50 text-indigo-200 hover:bg-[#5f3dc4]/20 hover:text-white transition-all duration-300"
+                onClick={() => signInWithGoogle()}
+              >
+                <SiGoogle className="h-5 w-5" /> Sign up with Google
+              </Button>
+            </motion.div>
 
-          <Button
-            type="submit"
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white" // Blue gradient button
-            disabled={isLoading}
-          >
-            {isLoading ? 'Creating account...' : 'Create account'}
-          </Button>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="relative mb-6"
+            >
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-indigo-700/30"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-transparent text-indigo-300">Or continue with</span>
+              </div>
+            </motion.div>
+            
+            <motion.form
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="space-y-5"
+              onSubmit={handleSubmit}
+            >
+              {errors.submit && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="bg-red-900/20 border border-red-700/50 rounded-md p-4"
+                >
+                  <p className="text-sm text-red-300">{errors.submit}</p>
+                </motion.div>
+              )}
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="fullName" className="text-indigo-200 flex items-center gap-2">
+                    <User className="h-4 w-4" /> Full name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={formData.fullName}
+                    onChange={handleInputChange('fullName')}
+                    placeholder="Enter your full name"
+                    className="mt-1 bg-[#302b63]/50 border-indigo-700/50 text-indigo-100 placeholder:text-indigo-500 focus:border-[#7950f2]"
+                  />
+                  {errors.fullName && <p className="text-sm text-red-400 mt-1">{errors.fullName}</p>}
+                </div>
+                
+                <div>
+                  <Label htmlFor="email" className="text-indigo-200 flex items-center gap-2">
+                    <Mail className="h-4 w-4" /> Email address
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    placeholder="Enter your email"
+                    className="mt-1 bg-[#302b63]/50 border-indigo-700/50 text-indigo-100 placeholder:text-indigo-500 focus:border-[#7950f2]"
+                  />
+                  {errors.email && <p className="text-sm text-red-400 mt-1">{errors.email}</p>}
+                </div>
+                
+                <div>
+                  <Label htmlFor="password" className="text-indigo-200 flex items-center gap-2">
+                    <Lock className="h-4 w-4" /> Password
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      placeholder="Enter your password"
+                      className="bg-[#302b63]/50 border-indigo-700/50 text-indigo-100 placeholder:text-indigo-500 focus:border-[#7950f2] pr-10"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-400 hover:text-indigo-300"
+                      onClick={togglePasswordVisibility}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-sm text-red-400 mt-1">{errors.password}</p>}
+                </div>
+                
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-indigo-200 flex items-center gap-2">
+                    <Lock className="h-4 w-4" /> Confirm password
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange('confirmPassword')}
+                      placeholder="Confirm your password"
+                      className="bg-[#302b63]/50 border-indigo-700/50 text-indigo-100 placeholder:text-indigo-500 focus:border-[#7950f2] pr-10"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-400 hover:text-indigo-300"
+                      onClick={toggleConfirmPasswordVisibility}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="text-sm text-red-400 mt-1">{errors.confirmPassword}</p>}
+                </div>
+              </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Sign in
-              </Link>
-            </p>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-[0_0_20px_5px_rgba(124,58,237,0.3)] transition-all duration-300"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Creating account...' : 'Create account'}
+                </Button>
+              </motion.div>
+
+              <div className="text-center mt-4">
+                <p className="text-sm text-indigo-300">
+                  Already have an account?{' '}
+                  <Link href="/login" className="font-medium text-[#9775fa] hover:text-[#b794f4] transition-colors">
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </motion.form>
           </div>
-        </form>
-      </Card>
+        </Card>
+      </motion.div>
     </BackgroundLines>
   );
 }

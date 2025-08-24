@@ -7,7 +7,7 @@ import {
 } from "motion/react";
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+
 
 export const FloatingDock = ({
   items,
@@ -32,7 +32,7 @@ const FloatingDockMobile = ({
   const [open, setOpen] = useState(false);
   
   return (
-    <div className="block md:hidden relative">
+    <div className="block md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 z-50 p-6">
       <AnimatePresence>
         {open && (
           <motion.div
@@ -83,7 +83,7 @@ const FloatingDockDesktop = ({
   const secondHalf = items.slice(midIndex);
   
   return (
-    <div className="hidden md:flex justify-center w-full">
+    <div className="hidden md:flex justify-center w-full fixed top-0 z-50 px-6 py-4">
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -112,7 +112,9 @@ const FloatingDockDesktop = ({
               WebkitBackdropFilter: "blur(16px)"
             }}
           >
-            <Image src="/logo.png" alt="Logo" width={80} height={24} />
+           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-sm">Contently</span>
+              </div>
           </div>
         </Link>
         

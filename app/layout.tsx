@@ -3,10 +3,10 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import LayoutWrapper from '@/components/layout/LayoutWrapper';
-import { StickyBanner } from '@/components/ui/sticky-banner';
+
 import { motion } from 'framer-motion';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'optional' });
 
 export default function RootLayout({
   children,
@@ -15,12 +15,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <StickyBanner>
-          <p className="text-sm font-bold text-primary-foreground">
-            This project is under development and is being upgraded day by day.
-          </p>
-        </StickyBanner>
+      <body className={inter.className} >
+        
         <LayoutWrapper>
           <motion.div
             initial={{ opacity: 0, y: 20 }}

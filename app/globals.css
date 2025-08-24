@@ -45,7 +45,8 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #EBD3F8;
+  background-color: var(--background);
+  --background: #302b63;
   --foreground: #2E073F;
   --card: #EBD3F8;
   --card-foreground: #2E073F;

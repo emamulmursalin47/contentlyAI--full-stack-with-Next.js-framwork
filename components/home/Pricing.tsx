@@ -2,59 +2,33 @@
 import Container from '@/components/ui/Container';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Star, Zap, Shield } from 'lucide-react';
+import { CheckCircle, Zap,} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 export default function PricingPage() {
   const pricingTiers = [
     {
-      name: 'Free',
-      price: '$0',
+      name: 'Premium', // Renamed from Pro to Premium
+      price: '$0', // Set to free
       frequency: '/month',
-      description: 'Perfect for getting started.',
-      features: [
-        '5 projects',
-        'Basic analytics',
-        'Community support',
-        '1GB storage',
-      ],
-      buttonText: 'Get Started Free',
-      buttonVariant: 'outline',
-      icon: <Star className="h-6 w-6" />
-    },
-    {
-      name: 'Pro',
-      price: '$29',
-      frequency: '/month',
-      description: 'For growing teams and advanced features.',
+      description: 'Access all premium features for free, for a limited time!', // Updated description
       features: [
         'Unlimited projects',
         'Advanced analytics',
         'Priority email support',
         '100GB storage',
         'Custom domains',
+        'All Pro features', // Added from Enterprise
+        'Dedicated support', // Added from Enterprise
+        'SLA guarantee', // Added from Enterprise
+        'On-premise options', // Added from Enterprise
+        'Advanced security', // Added from Enterprise
       ],
-      buttonText: 'Start Pro Trial',
+      buttonText: 'Get Started Free', // Updated button text
       buttonVariant: 'default',
       highlight: true,
       icon: <Zap className="h-6 w-6" />
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      frequency: '',
-      description: 'Tailored solutions for large organizations.',
-      features: [
-        'All Pro features',
-        'Dedicated support',
-        'SLA guarantee',
-        'On-premise options',
-        'Advanced security',
-      ],
-      buttonText: 'Contact Sales',
-      buttonVariant: 'outline',
-      icon: <Shield className="h-6 w-6" />
     },
   ];
 
@@ -68,9 +42,9 @@ export default function PricingPage() {
 
   return (
     <>
-      <main className="flex-grow py-16 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] min-h-screen pt-16">
+      <main className="flex-grow py-8 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] min-h-screen">
         {/* Background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
@@ -93,10 +67,10 @@ export default function PricingPage() {
               }}
             />
           ))}
-        </div>
+        </div> */}
 
         <Container>
-          <div className="text-center mb-16 relative z-10">
+          <div className="text-center py-20 mb-5 relative z-10">
             <motion.h1 
               className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300 mb-4"
               initial={{ opacity: 0, y: 20 }}

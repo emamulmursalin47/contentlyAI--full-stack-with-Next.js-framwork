@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Image from 'next/image'; // Import Image
+
 import { 
   MessageSquare, 
   Plus, 
@@ -9,12 +9,13 @@ import {
   Menu,
   Trash2,
   Edit3,
-  ChevronLeft, // New icon for collapse/expand
+  ChevronLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, isToday, isYesterday } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
 interface Conversation {
   id: string;
   title: string;
@@ -22,12 +23,14 @@ interface Conversation {
   targetPlatform: string;
   llmModel: string;
 }
+
 interface User {
   id: string;
   email: string;
   fullName: string;
   avatarUrl?: string;
 }
+
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -37,9 +40,10 @@ interface SidebarProps {
   onNewConversation: (llmModel?: string, targetPlatform?: string) => void;
   onDeleteConversation: (id: string) => void;
   onRenameConversation: (id: string, title: string) => void;
-  currentLlmModel?: string; // New prop
-  currentTargetPlatform?: string; // New prop
+  currentLlmModel?: string;
+  currentTargetPlatform?: string;
 }
+
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onToggle,
@@ -55,7 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false); // New state for desktop collapse
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -64,10 +69,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       console.error('Logout error:', error);
     }
   };
+
   const startEditing = (conversation: Conversation) => {
     setEditingId(conversation.id);
     setEditTitle(conversation.title);
   };
+
   const saveEdit = () => {
     if (editingId && editTitle.trim()) {
       onRenameConversation(editingId, editTitle.trim());
@@ -75,60 +82,75 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setEditingId(null);
     setEditTitle('');
   };
+
   const cancelEdit = () => {
     setEditingId(null);
     setEditTitle('');
   };
+
   const formatDate = (date: Date) => {
     if (isToday(date)) return 'Today';
     if (isYesterday(date)) return 'Yesterday';
     return format(date, 'MMM d, yyyy');
   };
+
   const groupedConversations = conversations.reduce((groups: { [key: string]: Conversation[] }, conversation) => {
-    const date = formatDate(conversation.updated_at);
+    const date = formatDate(new Date(conversation.updated_at));
     if (!groups[date]) groups[date] = [];
     groups[date].push(conversation);
     return groups;
   }, {});
+
   return (
     <>
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-20 lg:hidden"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={onToggle}
         />
       )}
       
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 bg-white transition-all duration-300 ease-in-out shadow-lg
+        className={`fixed inset-y-0 left-0 z-50 bg-[#0f0c29] text-indigo-100 transition-all duration-300 ease-in-out shadow-2xl border-r border-indigo-700/30
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           ${isCollapsed ? 'w-16' : 'w-72'} 
-          lg:static lg:translate-x-0 lg:block`} // Ensure it's always block on large screens
+          lg:static lg:translate-x-0 lg:block`}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-100">
-            {!isCollapsed && ( // Conditionally render logo and title
-              <div className="flex items-center space-x-2"> {/* Added div for logo and text */}
-                <Image src="/logo.png" alt=" Logo" width={160} height={50} /> {/* Added logo */}
-               
+          <div className="flex items-center justify-between p-5 border-b border-indigo-700/30">
+            {!isCollapsed && (
+              
+              <Link href="/">
+          <div className="flex items-center ml-14 justify-center h-16 w-32 rounded-2xl bg-transparent backdrop-blur-xl border border-white/20 cursor-pointer"
+            style={{
+              boxShadow: "0 4px 16px rgba(122, 28, 172, 0.3)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)"
+            }}
+          >
+           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-xl">Contently</span>
               </div>
+          </div>
+        </Link>
+             
             )}
             <button
               onClick={() => {
-                if (window.innerWidth < 1024) { // Check if on mobile breakpoint
-                  onToggle(); // Use onToggle for mobile
+                if (window.innerWidth < 1024) {
+                  onToggle();
                 } else {
-                  setIsCollapsed(!isCollapsed); // Use isCollapsed for desktop
+                  setIsCollapsed(!isCollapsed);
                 }
               }}
-              className={`rounded-lg p-2 text-gray-400 hover:bg-gray-100 lg:block ${isCollapsed ? 'mx-auto' : ''}`} // Added mx-auto when collapsed
+              className={`rounded-lg p-2 text-indigo-300 hover:bg-[#302b63]/50 lg:block ${isCollapsed ? 'mx-auto' : ''}`}
             >
-              {window.innerWidth < 1024 ? ( // Show Menu icon on mobile
+              {typeof window !== 'undefined' && window.innerWidth < 1024 ? (
                 <Menu className="h-5 w-5" />
-              ) : ( // Show Chevron icon on desktop
+              ) : (
                 <ChevronLeft className={`h-5 w-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
               )}
             </button>
@@ -138,11 +160,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="p-4">
             <Button
               onClick={() => onNewConversation(currentLlmModel, currentTargetPlatform)}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md transition-all duration-200"
+              className="w-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] text-white hover:from-[#6a40e1] hover:to-[#502ca3] shadow-lg hover:shadow-[0_0_20px_5px_rgba(124,58,237,0.3)] transition-all duration-300"
               variant="default"
             >
-              <Plus className={`${isCollapsed ? 'mx-auto' : 'mr-2'} h-4 w-4`} /> {/* Center icon when collapsed */}
-              {!isCollapsed && 'New Conversation'} {/* Conditionally render text */}
+              <Plus className={`${isCollapsed ? 'mx-auto' : 'mr-2'} h-4 w-4`} />
+              {!isCollapsed && 'New Conversation'}
             </Button>
           </div>
           
@@ -151,8 +173,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-5">
               {Object.entries(groupedConversations).map(([date, convs]) => (
                 <div key={date}>
-                  {!isCollapsed && ( // Conditionally render date
-                    <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 pl-1">
+                  {!isCollapsed && (
+                    <h3 className="text-xs font-medium text-indigo-400 uppercase tracking-wider mb-2 pl-1">
                       {date}
                     </h3>
                   )}
@@ -162,17 +184,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         key={conversation.id}
                         className={`group relative rounded-lg transition-all duration-200 ${
                           currentConversationId === conversation.id
-                            ? 'bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 shadow-sm'
-                            : 'hover:bg-gray-50'
-                        } ${isCollapsed ? 'p-3' : 'p-3'}`} // Added consistent padding for collapsed state
+                            ? 'bg-[#302b63]/50 border border-[#7950f2]/50 shadow-md'
+                            : 'hover:bg-[#302b63]/30'
+                        } ${isCollapsed ? 'p-3' : 'p-3'}`}
                       >
                         <Link
                           href={`/chat/${conversation.id}`}
                           className="block"
                         >
                           <div className={`flex ${isCollapsed ? 'items-center justify-center' : 'items-center'}`}>
-                            <MessageSquare className={`${isCollapsed ? '' : 'mr-3'} h-4 w-4 text-blue-500 flex-shrink-0`} />
-                            <div className="flex-1 min-w-0 overflow-hidden"> {/* Added overflow-hidden */}
+                            <MessageSquare className={`${isCollapsed ? '' : 'mr-3'} h-4 w-4 text-[#9775fa] flex-shrink-0`} />
+                            <div className="flex-1 min-w-0 overflow-hidden">
                               {editingId === conversation.id ? (
                                 <input
                                   value={editTitle}
@@ -182,24 +204,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                     if (e.key === 'Enter') saveEdit();
                                     if (e.key === 'Escape') cancelEdit();
                                   }}
-                                  className="w-full bg-white text-sm rounded px-2 py-1 border border-gray-200 outline-none focus:ring-1 focus:ring-blue-500"
+                                  className="w-full bg-[#0f0c29] text-sm rounded px-2 py-1 border border-indigo-700/50 outline-none focus:ring-1 focus:ring-[#7950f2]"
                                   autoFocus
                                   onClick={(e) => e.preventDefault()}
                                 />
                               ) : (
-                                !isCollapsed && ( // Conditionally render title
-                                  <p className="text-sm font-medium text-gray-800 truncate">
+                                !isCollapsed && (
+                                  <p className="text-sm font-medium text-indigo-100 truncate">
                                     {conversation.title}
                                   </p>
                                 )
                               )}
-                              {!isCollapsed && ( // Conditionally render platform/model
-                                <p className="text-xs text-gray-500 truncate mt-1">
+                              {!isCollapsed && (
+                                <p className="text-xs text-indigo-300 truncate mt-1">
                                   {conversation.targetPlatform} • {conversation.llmModel}
                                 </p>
                               )}
-                              {!isCollapsed && ( // Conditionally render updated at time
-                                <p className="text-xs text-gray-400 truncate mt-0.5">
+                              {!isCollapsed && (
+                                <p className="text-xs text-indigo-400 truncate mt-0.5">
                                   Updated: {format(new Date(conversation.updated_at), 'MMM d, yyyy HH:mm')}
                                 </p>
                               )}
@@ -207,27 +229,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           </div>
                         </Link>
                         
-                        {/* Action buttons */}
-                        {!isCollapsed && ( // Hide action buttons when collapsed
-                          <div className="absolute right-2 top-2 transition-opacity duration-200"> {/* Removed opacity-0 group-hover:opacity-100 */}
-                            <div className="flex space-x-1">
+                        {!isCollapsed && (
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="flex space-x-1 bg-[#0f0c29] p-1 rounded-md">
                               <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  startEditing(conversation);
-                                }}
-                                className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
+                                onClick={(e) => { e.preventDefault(); startEditing(conversation); }}
+                                className="p-1.5 text-indigo-300 hover:text-[#9775fa] hover:bg-[#302b63]/50 rounded-md transition-colors"
                               >
                                 <Edit3 className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  if (window.confirm('Are you sure you want to delete this conversation?')) {
+                                  if (window.confirm('Are you sure?')) {
                                     onDeleteConversation(conversation.id);
                                   }
                                 }}
-                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                className="p-1.5 text-indigo-300 hover:text-red-400 hover:bg-red-900/30 rounded-md transition-colors"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -243,33 +261,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           
           {/* Footer */}
-          <div className="p-4 border-t border-gray-100 bg-gray-50">
-            <div className="flex flex-col items-start"> {/* Changed to flex-col, items-start */}
-              <div className="flex items-center space-x-3 w-full"> {/* User info group, w-full to take space */}
-                <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center shadow-sm flex-shrink-0">
+          <div className="p-4 border-t border-indigo-700/30 bg-[#1a1633]">
+            <div className="flex flex-col items-start">
+              <div className="flex items-center space-x-3 w-full">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] flex items-center justify-center shadow-sm flex-shrink-0">
                   <User className="h-4 w-4 text-white" />
                 </div>
-                {!isCollapsed && ( // Conditionally render user info
+                {!isCollapsed && (
                   <div className="min-w-0 flex-1 overflow-hidden">
-                    <p className="text-sm font-medium text-gray-800 truncate">
+                    <p className="text-sm font-medium text-indigo-100 truncate">
                       {user.fullName || user.email}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-indigo-300 truncate">
                       {user.email}
                     </p>
                   </div>
                 )}
               </div>
-              {!isCollapsed && ( // Only show buttons when not collapsed
-                <div className="flex items-center mt-3 w-full justify-center"> {/* Buttons group, mt-3 for spacing, justify-center to center */}
+              {!isCollapsed && (
+                <div className="flex items-center mt-3 w-full justify-center">
                   <Link href="/settings">
-                    <button className="rounded-lg p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors mr-1">
+                    <button className="rounded-lg p-2 text-indigo-300 hover:bg-[#302b63]/50 hover:text-white transition-colors mr-1">
                       <Settings className="h-4 w-4" />
                     </button>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="rounded-lg p-2 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                    className="rounded-lg p-2 text-indigo-300 hover:bg-[#302b63]/50 hover:text-white transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                   </button>

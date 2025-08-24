@@ -90,7 +90,7 @@ export default function FeaturesSectionDemo() {
   return (
     <div 
       ref={sectionRef}
-      className="relative min-h-[80vh] py-20 overflow-hidden"
+      className="relative min-h-[80vh] py-8 overflow-hidden"
     >
       {/* Background elements matching HeroSection */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] z-0"></div>
