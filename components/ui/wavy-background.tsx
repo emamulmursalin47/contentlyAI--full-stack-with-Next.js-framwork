@@ -1,3 +1,4 @@
+
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -24,7 +25,7 @@ export const WavyBackground = ({
   waveWidth?: number;
   backgroundFill?: string;
   blur?: number;
-  speed?: "slow" | "fast";
+  speed?: "slow" | "fast" | "medium";
   waveOpacity?: number;
   [key: string]: any;
 }) => {
@@ -41,13 +42,14 @@ export const WavyBackground = ({
     switch (speed) {
       case "slow":
         return 0.001;
+      case "medium":
+        return 0.0015;
       case "fast":
         return 0.002;
       default:
         return 0.001;
     }
   };
-
   const init = () => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
@@ -62,7 +64,6 @@ export const WavyBackground = ({
     };
     render();
   };
-
   const waveColors = colors ?? [
     "#38bdf8",
     "#818cf8",
@@ -84,7 +85,6 @@ export const WavyBackground = ({
       ctx.closePath();
     }
   };
-
   let animationId: number;
   const render = () => {
     ctx.fillStyle = backgroundFill || "black";
@@ -93,14 +93,12 @@ export const WavyBackground = ({
     drawWave(5);
     animationId = requestAnimationFrame(render);
   };
-
   useEffect(() => {
     init();
     return () => {
       cancelAnimationFrame(animationId);
     };
   }, []);
-
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {
     // I'm sorry but i have got to support it on safari.
@@ -110,7 +108,6 @@ export const WavyBackground = ({
         !navigator.userAgent.includes("Chrome")
     );
   }, []);
-
   return (
     <div
       className={cn(

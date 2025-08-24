@@ -1,1 +1,0 @@
-# contentlyAI--full-stack-with-Next.js-framwork
