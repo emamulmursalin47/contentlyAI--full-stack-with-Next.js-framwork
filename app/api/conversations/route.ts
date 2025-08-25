@@ -55,15 +55,52 @@ export async function GET(request: NextRequest) {
       return response;
     }
 
-    const conversations = await Conversation.find({ userId }).sort({ updatedAt: -1 });
+    // Optional pagination parameters (backward compatible)
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100); // Max 100 items
+    const skip = (page - 1) * limit;
+
+    // Build query with optional pagination
+    let query = Conversation.find({ userId }).sort({ updatedAt: -1 });
     
-    const finalResponse = NextResponse.json({
+    // Only apply pagination if page parameter is provided
+    if (searchParams.get('page')) {
+      query = query.skip(skip).limit(limit);
+    }
+
+    // Select only necessary fields for list view
+    const conversations = await query.select('title targetPlatform llmModel updatedAt createdAt');
+    
+    // Get total count for pagination (only if pagination is requested)
+    let totalCount = undefined;
+    if (searchParams.get('page')) {
+      totalCount = await Conversation.countDocuments({ userId });
+    }
+    
+    const responseData: any = {
       conversations: conversations.map(conv => ({
         ...conv.toObject(),
         id: conv._id.toString()
       }))
-    });
+    };
+
+    // Add pagination metadata if requested
+    if (searchParams.get('page')) {
+      responseData.pagination = {
+        page,
+        limit,
+        total: totalCount,
+        pages: Math.ceil(totalCount! / limit),
+        hasNext: page * limit < totalCount!,
+        hasPrev: page > 1
+      };
+    }
     
+    const finalResponse = NextResponse.json(responseData);
+    
+    // Add cache headers for better performance
+    finalResponse.headers.set('Cache-Control', 'private, max-age=30');
     finalResponse.headers.set('Access-Control-Allow-Origin', APP_URL);
     finalResponse.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
     finalResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');

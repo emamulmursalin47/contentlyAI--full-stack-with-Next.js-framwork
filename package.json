@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze": "node scripts/analyze-bundle.js",
+    "build:analyze": "npm run build && npm run analyze",
+    "test:accessibility": "echo 'Open browser console and run: window.accessibilityUtils.runAudit()' && echo 'Or use Lighthouse accessibility audit in DevTools'"
   },
   "dependencies": {
     "@ai-sdk/groq": "^2.0.10",

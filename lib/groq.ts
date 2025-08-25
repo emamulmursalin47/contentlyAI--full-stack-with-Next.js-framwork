@@ -1,3 +1,6 @@
+import { aiQueue } from './aiQueue';
+import { apiCache } from './cache';
+
 export interface GroqMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -53,10 +56,41 @@ export class GroqService {
     return cleanedText;
   }
 
+  private generateCacheKey(messages: GroqMessage[], model: LLMModel, platform: SocialPlatform): string {
+    const messageHash = messages.map(m => `${m.role}:${m.content}`).join('|');
+    return `groq:${model}:${platform}:${Buffer.from(messageHash).toString('base64').slice(0, 32)}`;
+  }
+
   async generateContent(
     messages: GroqMessage[],
     model: LLMModel = 'llama-3.1-8b-instant',
     platform: SocialPlatform = 'general'
+  ): Promise<string> {
+    // Check cache first (only for non-user specific content)
+    const cacheKey = this.generateCacheKey(messages, model, platform);
+    const cachedResult = apiCache.get(cacheKey);
+    if (cachedResult) {
+      console.log('🎯 Cache hit for AI request');
+      return cachedResult;
+    }
+
+    // Queue the request to prevent API overload
+    const result = await aiQueue.add(async () => {
+      return this.executeGroqRequest(messages, model, platform);
+    }, 1); // Normal priority
+
+    // Cache successful results for 10 minutes
+    if (result) {
+      apiCache.set(cacheKey, result, 600);
+    }
+
+    return result;
+  }
+
+  private async executeGroqRequest(
+    messages: GroqMessage[],
+    model: LLMModel,
+    platform: SocialPlatform
   ): Promise<string> {
     const systemPrompt = `You are a social media content creation expert. ${this.getPlatformPrompt(platform)}
 
@@ -68,6 +102,8 @@ Always provide actionable, engaging content that follows platform best practices
     ];
 
     try {
+      console.log(`🤖 Making AI request (Queue: ${aiQueue.getQueueLength()}, Active: ${aiQueue.getCurrentRequests()})`);
+      
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect, { Conversation, Message } from '@/lib/mongodb';
 import { groqService, LLMModel, SocialPlatform, GroqMessage } from '@/lib/groq';
 import { AuthService } from '@/lib/auth';
+import { measureAsync, perfMonitor } from '@/lib/performance';
 
 // Platform-specific content guidelines
 type PlatformGuidelines = {
@@ -118,33 +119,41 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await dbConnect();
+  return measureAsync('api-get-messages', async () => {
+    try {
+      await dbConnect();
 
-    const accessToken = request.cookies.get('access_token')?.value;
-    const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
-    const userId = payload?.userId;
+      const accessToken = request.cookies.get('access_token')?.value;
+      const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
+      const userId = payload?.userId;
 
-    const { id } = await params;
-    const conversationId = id;
+      const { id } = await params;
+      const conversationId = id;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const conversation = await measureAsync('db-find-conversation', () =>
+        Conversation.findOne({ _id: conversationId, userId })
+      );
+
+      if (!conversation) {
+        return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      }
+
+      const messages = await measureAsync('db-find-messages', () =>
+        Message.find({ conversationId }).sort({ createdAt: 1 })
+      );
+
+      const response = NextResponse.json({ messages });
+      response.headers.set('Cache-Control', 'private, max-age=10'); // Cache for 10 seconds
+      return response;
+    } catch (error) {
+      console.error('Messages fetch error:', error);
+      return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
     }
-
-    const conversation = await Conversation.findOne({ _id: conversationId, userId });
-
-    if (!conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
-    }
-
-    const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
-
-    return NextResponse.json({ messages });
-  } catch (error) {
-    console.error('Messages fetch error:', error);
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(

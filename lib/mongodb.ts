@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// Add indexes for better query performance
+userSchema.index({ email: 1 });
+userSchema.index({ firebaseUid: 1 });
+userSchema.index({ createdAt: -1 });
 
 const conversationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
@@ -74,6 +78,10 @@ const conversationSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// Add compound indexes for efficient queries
+conversationSchema.index({ userId: 1, updatedAt: -1 });
+conversationSchema.index({ userId: 1, createdAt: -1 });
+
 const messageSchema = new mongoose.Schema({
   conversationId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Conversation' },
   role: { type: String, enum: ['user', 'assistant', 'system'], required: true },
@@ -81,6 +89,10 @@ const messageSchema = new mongoose.Schema({
   thinkingContent: { type: String }, // Added thinkingContent
   createdAt: { type: Date, default: Date.now },
 });
+
+// Add indexes for message queries
+messageSchema.index({ conversationId: 1, createdAt: 1 });
+messageSchema.index({ conversationId: 1, role: 1 });
 
 const userSettingsSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true, ref: 'User' },
