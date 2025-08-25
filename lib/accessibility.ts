@@ -226,7 +226,14 @@ export const testColorContrasts = () => {
 
 // Export for use in development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  (window as any).accessibilityUtils = {
+  (window as typeof window & {
+    accessibilityUtils?: {
+      runAudit: typeof runAccessibilityAudit;
+      testContrasts: typeof testColorContrasts;
+      calculateContrastRatio: typeof calculateContrastRatio;
+      meetsWCAGStandards: typeof meetsWCAGStandards;
+    };
+  }).accessibilityUtils = {
     runAudit: runAccessibilityAudit,
     testContrasts: testColorContrasts,
     calculateContrastRatio,

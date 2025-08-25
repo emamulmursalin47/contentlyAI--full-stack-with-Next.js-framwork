@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   crossOrigin: 'anonymous',
   
-  // JavaScript optimization
-  swcMinify: true, // Use SWC for faster minification
-  
   // Experimental features for better performance
   experimental: {
     optimizeCss: true, // Enable CSS optimization
@@ -64,8 +61,9 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // Compiler options for modern browsers
+  // Compiler options for modern browsers (replaces swcMinify)
   compiler: {
+    // Remove console logs in production (except errors and warnings)
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn']
     } : false,
@@ -79,6 +77,19 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
+
+  // Enable modern JavaScript features
+  transpilePackages: [
+    '@radix-ui/react-dialog',
+    '@radix-ui/react-dropdown-menu',
+    'framer-motion'
+  ],
+
+  // Performance optimizations
+  poweredByHeader: false, // Remove X-Powered-By header
+  
+  // Compression (handled by deployment platform usually)
+  compress: true,
 };
 
 export default nextConfig;

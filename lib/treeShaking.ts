@@ -6,7 +6,6 @@ export {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@radix-ui/react-dialog';
@@ -73,7 +72,7 @@ export const createOptimizedImport = <T>(
   importPath: string,
   namedImports: string[]
 ): Promise<Record<string, T>> => {
-  return import(importPath).then((module) => {
+  return import(importPath).then((module: Record<string, T>) => {
     const optimized: Record<string, T> = {};
     namedImports.forEach((name) => {
       if (module[name]) {
@@ -96,7 +95,7 @@ export const preloadCriticalModules = (): void => {
   ];
 
   // Use requestIdleCallback for non-blocking preloading
-  const preloadModule = (moduleImport: () => Promise<any>) => {
+  const preloadModule = (moduleImport: () => Promise<unknown>) => {
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
         moduleImport().catch(() => {

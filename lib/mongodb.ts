@@ -56,9 +56,7 @@ const userSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Add indexes for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ firebaseUid: 1 });
+// Add additional indexes for better query performance (email and firebaseUid already have unique indexes)
 userSchema.index({ createdAt: -1 });
 
 const conversationSchema = new mongoose.Schema({

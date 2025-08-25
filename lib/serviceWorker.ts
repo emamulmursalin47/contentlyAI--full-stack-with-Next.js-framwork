@@ -60,8 +60,8 @@ export const unregisterServiceWorker = async (): Promise<void> => {
 };
 
 // Optimize for back/forward cache
-export const optimizeForBFCache = (): void => {
-  if (typeof window === 'undefined') return;
+export const optimizeForBFCache = (): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
 
   // Prevent common issues that break back/forward cache
   

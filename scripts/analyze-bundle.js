@@ -5,21 +5,21 @@
  * Run with: npm run analyze
  */
 
-const fs = require('fs');
-const path = require('path');
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 console.log('📊 Analyzing Bundle Size and Optimization Opportunities...\n');
 
 // Check if build exists
-const buildPath = path.join(__dirname, '..', '.next');
-if (!fs.existsSync(buildPath)) {
+const buildPath = join(__dirname, '..', '.next');
+if (!existsSync(buildPath)) {
   console.log('❌ No build found. Run "npm run build" first.');
   process.exit(1);
 }
 
 // Analyze package.json for heavy dependencies
-const packageJsonPath = path.join(__dirname, '..', 'package.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const packageJsonPath = join(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 
 console.log('📦 Heavy Dependencies Analysis:');
 const heavyDependencies = {
@@ -50,16 +50,16 @@ const optimizationFiles = [
 ];
 
 optimizationFiles.forEach(({ file, purpose }) => {
-  const filePath = path.join(__dirname, '..', file);
-  const exists = fs.existsSync(filePath);
+  const filePath = join(__dirname, '..', file);
+  const exists = existsSync(filePath);
   console.log(`  ${exists ? '✅' : '❌'} ${file} - ${purpose}`);
 });
 
 // Analyze Next.js config
 console.log('\n⚙️  Next.js Configuration Analysis:');
-const nextConfigPath = path.join(__dirname, '..', 'next.config.ts');
-if (fs.existsSync(nextConfigPath)) {
-  const nextConfig = fs.readFileSync(nextConfigPath, 'utf8');
+const nextConfigPath = join(__dirname, '..', 'next.config.ts');
+if (existsSync(nextConfigPath)) {
+  const nextConfig = readFileSync(nextConfigPath, 'utf8');
   
   const optimizations = [
     { check: 'swcMinify: true', description: 'SWC minification enabled' },
@@ -78,10 +78,10 @@ if (fs.existsSync(nextConfigPath)) {
 
 // Check service worker
 console.log('\n🔄 Service Worker Analysis:');
-const swPath = path.join(__dirname, '..', 'public', 'sw.js');
-if (fs.existsSync(swPath)) {
+const swPath = join(__dirname, '..', 'public', 'sw.js');
+if (existsSync(swPath)) {
   console.log('  ✅ Service worker exists');
-  const swContent = fs.readFileSync(swPath, 'utf8');
+  const swContent = readFileSync(swPath, 'utf8');
   
   const swFeatures = [
     { check: 'addEventListener(\'install\'', description: 'Install event handler' },

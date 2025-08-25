@@ -55,7 +55,14 @@ export default function RootLayout({
     // Load accessibility utilities in development
     if (process.env.NODE_ENV === 'development') {
       import('@/lib/accessibility').then(({ runAccessibilityAudit, testColorContrasts, calculateContrastRatio, meetsWCAGStandards }) => {
-        (window as any).accessibilityUtils = {
+        (window as typeof window & {
+          accessibilityUtils?: {
+            runAudit: () => void;
+            testContrasts: () => void;
+            calculateContrastRatio: (color1: string, color2: string) => number;
+            meetsWCAGStandards: (fg: string, bg: string, level?: 'AA' | 'AAA', size?: 'normal' | 'large') => boolean;
+          };
+        }).accessibilityUtils = {
           runAudit: runAccessibilityAudit,
           testContrasts: testColorContrasts,
           calculateContrastRatio,

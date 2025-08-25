@@ -1,13 +1,13 @@
 // AI Request Queue to prevent API overload
-interface QueueItem<T> {
-  request: () => Promise<T>;
-  resolve: (value: T) => void;
-  reject: (error: any) => void;
+interface QueueItem {
+  request: () => Promise<unknown>;
+  resolve: (value: unknown) => void;
+  reject: (error: unknown) => void;
   priority: number;
 }
 
 class AIRequestQueue {
-  private queue: QueueItem<any>[] = [];
+  private queue: QueueItem[] = [];
   private processing = false;
   private maxConcurrent = 2; // Conservative limit
   private currentRequests = 0;
@@ -17,8 +17,13 @@ class AIRequestQueue {
     request: () => Promise<T>, 
     priority: number = 1
   ): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.queue.push({ request, resolve, reject, priority });
+    return new Promise<T>((resolve, reject) => {
+      this.queue.push({ 
+        request: request as () => Promise<unknown>, 
+        resolve: resolve as (value: unknown) => void, 
+        reject, 
+        priority 
+      });
       // Sort by priority (higher number = higher priority)
       this.queue.sort((a, b) => b.priority - a.priority);
       this.process();
@@ -47,7 +52,7 @@ class AIRequestQueue {
     this.processing = false;
   }
 
-  private async executeRequest<T>(item: QueueItem<T>) {
+  private async executeRequest(item: QueueItem) {
     try {
       const result = await item.request();
       item.resolve(result);

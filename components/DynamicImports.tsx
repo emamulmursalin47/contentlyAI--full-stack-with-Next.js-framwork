@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import { ComponentType } from 'react';
+import { ComponentType, ReactNode } from 'react';
 
 // Loading component for better UX
 const LoadingSpinner = () => (
@@ -68,10 +68,10 @@ export const DynamicDropdownMenu = dynamic(
 );
 
 // Helper function to create dynamic imports with consistent loading
-export const createDynamicImport = <T extends ComponentType<any>>(
+export const createDynamicImport = <T extends ComponentType<unknown>>(
   importFn: () => Promise<{ default: T } | T>,
   options: {
-    loading?: ComponentType;
+    loading?: () => ReactNode;
     ssr?: boolean;
   } = {}
 ) => {

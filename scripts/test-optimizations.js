@@ -1,12 +1,13 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 /**
  * Simple test script to verify optimizations are working
  * Run with: node scripts/test-optimizations.js
  */
 
-const fs = require('fs');
-const path = require('path');
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
 console.log('🔍 Testing ContentlyAI Optimizations...\n');
 
@@ -22,8 +23,8 @@ const optimizationFiles = [
 
 console.log('📁 Checking optimization files:');
 optimizationFiles.forEach(file => {
-  const filePath = path.join(__dirname, '..', file);
-  const exists = fs.existsSync(filePath);
+  const filePath = join(__dirname, '..', file);
+  const exists = existsSync(filePath);
   console.log(`  ${exists ? '✅' : '❌'} ${file}`);
 });
 
@@ -38,15 +39,15 @@ const originalFiles = [
 
 console.log('\n📋 Checking original files (should be intact):');
 originalFiles.forEach(file => {
-  const filePath = path.join(__dirname, '..', file);
-  const exists = fs.existsSync(filePath);
+  const filePath = join(__dirname, '..', file);
+  const exists = existsSync(filePath);
   console.log(`  ${exists ? '✅' : '❌'} ${file}`);
 });
 
 // Test 3: Check package.json for required dependencies
 console.log('\n📦 Checking dependencies:');
 try {
-  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+  const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
   const requiredDeps = ['react', 'next', 'mongoose', 'date-fns'];
   
   requiredDeps.forEach(dep => {
@@ -66,7 +67,7 @@ const requiredEnvVars = ['GROQ_API_KEY', 'MONGODB_URI'];
 requiredEnvVars.forEach(envVar => {
   // Check if mentioned in .env.local (don't read actual values for security)
   try {
-    const envFile = fs.readFileSync(path.join(__dirname, '..', '.env.local'), 'utf8');
+    const envFile = readFileSync(join(__dirname, '..', '.env.local'), 'utf8');
     const mentioned = envFile.includes(envVar);
     console.log(`  ${mentioned ? '✅' : '⚠️'} ${envVar} ${mentioned ? 'configured' : 'not found in .env.local'}`);
   } catch (error) {
@@ -86,8 +87,8 @@ const tsFiles = [
 
 tsFiles.forEach(file => {
   try {
-    const filePath = path.join(__dirname, '..', file);
-    const content = fs.readFileSync(filePath, 'utf8');
+    const filePath = join(__dirname, '..', file);
+    const content = readFileSync(filePath, 'utf8');
     
     // Basic syntax checks
     const hasExport = content.includes('export');

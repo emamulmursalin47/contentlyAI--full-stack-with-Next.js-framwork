@@ -73,12 +73,29 @@ export async function GET(request: NextRequest) {
     const conversations = await query.select('title targetPlatform llmModel updatedAt createdAt');
     
     // Get total count for pagination (only if pagination is requested)
-    let totalCount = undefined;
+    let totalCount: number | undefined = undefined;
     if (searchParams.get('page')) {
       totalCount = await Conversation.countDocuments({ userId });
     }
     
-    const responseData: any = {
+    const responseData: {
+      conversations: Array<{
+        id: string;
+        title: string;
+        targetPlatform: string;
+        llmModel: string;
+        updatedAt: string;
+        createdAt: string;
+      }>;
+      pagination?: {
+        page: number;
+        limit: number;
+        total: number;
+        pages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+      };
+    } = {
       conversations: conversations.map(conv => ({
         ...conv.toObject(),
         id: conv._id.toString()
@@ -86,13 +103,13 @@ export async function GET(request: NextRequest) {
     };
 
     // Add pagination metadata if requested
-    if (searchParams.get('page')) {
+    if (searchParams.get('page') && totalCount !== undefined) {
       responseData.pagination = {
         page,
         limit,
         total: totalCount,
-        pages: Math.ceil(totalCount! / limit),
-        hasNext: page * limit < totalCount!,
+        pages: Math.ceil(totalCount / limit),
+        hasNext: page * limit < totalCount,
         hasPrev: page > 1
       };
     }

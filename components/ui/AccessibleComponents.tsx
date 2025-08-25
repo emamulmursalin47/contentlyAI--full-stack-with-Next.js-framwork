@@ -1,5 +1,4 @@
 import React, { forwardRef } from 'react';
-import { accessibleColors } from '@/lib/colors';
 
 // Accessible Link Component
 interface AccessibleLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {

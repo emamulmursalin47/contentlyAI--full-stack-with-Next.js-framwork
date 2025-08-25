@@ -69,7 +69,7 @@ export class GroqService {
     // Check cache first (only for non-user specific content)
     const cacheKey = this.generateCacheKey(messages, model, platform);
     const cachedResult = apiCache.get(cacheKey);
-    if (cachedResult) {
+    if (cachedResult && typeof cachedResult === 'string') {
       console.log('🎯 Cache hit for AI request');
       return cachedResult;
     }
@@ -80,11 +80,11 @@ export class GroqService {
     }, 1); // Normal priority
 
     // Cache successful results for 10 minutes
-    if (result) {
+    if (result && typeof result === 'string') {
       apiCache.set(cacheKey, result, 600);
     }
 
-    return result;
+    return result as string;
   }
 
   private async executeGroqRequest(

@@ -49,7 +49,7 @@ class PerformanceMonitor {
   }
 
   getAllMetrics(): Record<string, { avg: number; min: number; max: number; count: number }> {
-    const result: Record<string, any> = {};
+    const result: Record<string, { avg: number; min: number; max: number; count: number }> = {};
     
     for (const [label] of this.metrics) {
       const summary = this.getMetricSummary(label);

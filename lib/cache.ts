@@ -1,8 +1,8 @@
 // Simple in-memory cache for API responses
 class SimpleCache {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
-  set(key: string, data: any, ttlSeconds: number = 300): void {
+  set(key: string, data: unknown, ttlSeconds: number = 300): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -10,7 +10,7 @@ class SimpleCache {
     });
   }
 
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const item = this.cache.get(key);
     if (!item) return null;
 
