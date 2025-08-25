@@ -1,16 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { User, Bot, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { format } from 'date-fns';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  created_at: Date;
-  isThinking?: boolean;
-  isStreaming?: boolean;
-  thinkingContent?: string;
-}
+import { Message } from '@/lib/types';
 
 interface ChatMessageProps {
   message: Message;
@@ -24,12 +15,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   
   const formattedTimestamp = useMemo(() => {
     try {
-      return format(new Date(message.created_at), 'MMM d, h:mm a');
+      return format(new Date(message.createdAt), 'MMM d, h:mm a');
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'Invalid date';
     }
-  }, [message.created_at]);
+  }, [message.createdAt]);
 
   const structuredContent = useMemo(() => {
     if (isUser || !message.content) return null;

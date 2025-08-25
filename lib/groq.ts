@@ -1,5 +1,5 @@
 import { aiQueue } from './aiQueue';
-import { apiCache } from './cache';
+
 
 export interface GroqMessage {
   role: 'user' | 'assistant' | 'system';
@@ -66,23 +66,13 @@ export class GroqService {
     model: LLMModel = 'llama-3.1-8b-instant',
     platform: SocialPlatform = 'general'
   ): Promise<string> {
-    // Check cache first (only for non-user specific content)
-    const cacheKey = this.generateCacheKey(messages, model, platform);
-    const cachedResult = apiCache.get(cacheKey);
-    if (cachedResult && typeof cachedResult === 'string') {
-      console.log('🎯 Cache hit for AI request');
-      return cachedResult;
-    }
+    // Caching is disabled for conversations as they are user-specific.
+    // The comment in the original code mentioned this but the implementation was caching.
 
     // Queue the request to prevent API overload
     const result = await aiQueue.add(async () => {
       return this.executeGroqRequest(messages, model, platform);
     }, 1); // Normal priority
-
-    // Cache successful results for 10 minutes
-    if (result && typeof result === 'string') {
-      apiCache.set(cacheKey, result, 600);
-    }
 
     return result as string;
   }

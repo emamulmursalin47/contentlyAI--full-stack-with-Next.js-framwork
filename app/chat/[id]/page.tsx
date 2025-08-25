@@ -1,14 +1,25 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { useAuth } from '@/hooks/useAuth';
+import { useConversations } from '@/hooks/useConversations';
 import { LLMModel, SocialPlatform } from '@/lib/groq';
 import fetchWithAuth from '@/lib/fetchWithAuth';
+import { Conversation, Message } from '@/lib/types';
+
+interface RawMessage {
+  _id?: string;
+  id?: string;
+  role: string;
+  content: string;
+  created_at?: string;
+  createdAt?: string;
+  isThinking?: boolean;
+}
 
 const LLM_MODELS = [
   { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Fast)', description: 'Quick responses, great for most tasks' },
@@ -27,30 +38,21 @@ const SOCIAL_PLATFORMS = [
   { value: 'youtube', label: 'YouTube Shorts', description: 'Vertical video descriptions' },
 ] as const;
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  created_at: Date;
-  isThinking?: boolean;
-  isStreaming?: boolean;
-}
 
-interface Conversation {
-  id: string;
-  title: string;
-  targetPlatform: string;
-  llmModel: string;
-  updated_at: Date;
-}
 
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { 
+    conversations, 
+    loading: conversationsLoading, 
+    createConversation, 
+    deleteConversation, 
+    renameConversation 
+  } = useConversations();
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,45 +61,28 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationId = params.id as string;
 
-  const loadConversations = useCallback(async () => {
-    try {
-      const response = await fetchWithAuth('/api/conversations');
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data.conversations.map((conv: Conversation) => {
-          const parsedDate = new Date(conv.updated_at);
-          return {
-            ...conv,
-            updated_at: isNaN(parsedDate.getTime()) ? new Date() : parsedDate,
-          };
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to load conversations:', error);
-    }
-  }, []);
-
   const loadConversation = useCallback(async () => {
     try {
       const response = await fetchWithAuth(`/api/conversations/${conversationId}`);
       if (response.ok) {
         const data = await response.json();
-        const parsedConversationUpdatedAt = new Date(data.conversation.updated_at);
-        setCurrentConversation({
-          ...data.conversation,
-          updated_at: isNaN(parsedConversationUpdatedAt.getTime()) ? new Date() : parsedConversationUpdatedAt,
-        });
-        setMessages(data.messages.map((msg: Message) => {
-          const parsedMessageCreatedAt = new Date(msg.created_at);
+        setCurrentConversation(data.conversation);
+        setMessages(data.messages.map((msg: RawMessage) => {
+          const dateString = msg.created_at || msg.createdAt;
+          const parsedMessageCreatedAt = dateString ? new Date(dateString) : new Date();
           return {
             ...msg,
-            created_at: isNaN(parsedMessageCreatedAt.getTime()) ? new Date() : parsedMessageCreatedAt,
+            createdAt: isNaN(parsedMessageCreatedAt.getTime()) ? new Date() : parsedMessageCreatedAt,
           };
         }));
+      } else if (response.status === 404) {
+        // Conversation not found, redirect to main chat page
+        router.push('/chat');
       } else {
         router.push('/chat');
       }
     } catch (error) {
+      console.error('Error loading conversation:', error);
       router.push('/chat');
     }
   }, [conversationId, router]);
@@ -108,71 +93,62 @@ export default function ChatPage() {
       return;
     }
     if (user) {
-      loadConversations();
       if (conversationId) {
         loadConversation();
       }
     }
-  }, [user, authLoading, conversationId, loadConversation, loadConversations, router]);
+  }, [user, authLoading, conversationId, loadConversation, router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking, isStreaming]);
 
+  const handleDeleteConversation = useCallback(async (id: string) => {
+    try {
+      // If we're deleting the current conversation, navigate away first
+      if (id === conversationId) {
+        // Find another conversation to navigate to
+        const otherConversation = conversations.find(c => c.id !== id);
+        if (otherConversation) {
+          // Navigate to another conversation
+          router.push(`/chat/${otherConversation.id}`);
+        } else {
+          // No other conversations, go to main chat page which will create a new one
+          router.push('/chat');
+        }
+      }
+      
+      // Delete the conversation (optimistic update will handle UI immediately)
+      await deleteConversation(id);
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    }
+  }, [conversationId, conversations, router, deleteConversation]);
+
   const createNewConversation = async () => {
     try {
-      const response = await fetchWithAuth('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'New Conversation', targetPlatform: 'general', llmModel: 'llama-3.1-8b-instant' }),
+      const newConversation = await createConversation({ 
+        title: 'New Conversation', 
+        llmModel: 'llama-3.1-8b-instant', 
+        targetPlatform: 'general' 
       });
-      if (response.ok) {
-        const data = await response.json();
-        await loadConversations();
-        router.push(`/chat/${data.conversation.id}`);
+      if (newConversation) {
+        // Navigate to the new conversation
+        router.push(`/chat/${newConversation.id}`);
       }
     } catch (error) {
-      console.error('Failed to create conversation:', error);
-    }
-  };
-
-  const deleteConversation = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
-    try {
-      const response = await fetchWithAuth(`/api/conversations/${id}`, { method: 'DELETE' });
-      if (response.ok) {
-        await loadConversations();
-        if (id === conversationId) router.push('/chat');
-      }
-    } catch (error) {
-      console.error('Failed to delete conversation:', error);
-    }
-  };
-
-  const renameConversation = async (id: string, title: string) => {
-    try {
-      const response = await fetchWithAuth(`/api/conversations/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
-      });
-      if (response.ok) {
-        await loadConversations();
-        if (id === conversationId) await loadConversation();
-      }
-    } catch (error) {
-      console.error('Failed to rename conversation:', error);
+      console.error('Error creating new conversation:', error);
     }
   };
 
   const sendMessage = useCallback(async (content: string) => {
     if (!currentConversation) return;
     setIsLoading(true);
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content, created_at: new Date() };
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content, createdAt: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setIsThinking(true);
     const assistantMessageId = 'thinking-' + Date.now().toString();
-    setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '', created_at: new Date(), isThinking: true }]);
+    setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '', createdAt: new Date(), isThinking: true }]);
 
     try {
       const response = await fetchWithAuth(`/api/conversations/${conversationId}/messages`, {
@@ -183,10 +159,11 @@ export default function ChatPage() {
       if (!response.ok) throw new Error('Failed to send message');
       const data = await response.json();
       if (data.aiMessage) {
-        setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, id: data.aiMessage._id, content: data.aiMessage.content, created_at: new Date(data.aiMessage.createdAt), isThinking: false } : msg));
+        setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, id: data.aiMessage._id, content: data.aiMessage.content, createdAt: new Date(data.aiMessage.createdAt), isThinking: false } : msg));
       }
       setIsThinking(false);
-      await loadConversation();
+      // Only reload conversation if we need to update the conversation metadata
+      // Messages are already updated optimistically above
     } catch (error) {
       console.error('Failed to send message:', error);
       setMessages(prev => prev.filter(msg => msg.id !== userMessage.id && msg.id !== assistantMessageId));
@@ -194,7 +171,7 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentConversation, conversationId, loadConversation]);
+  }, [currentConversation, conversationId]);
 
   const handleSettingsSave = async (model: LLMModel, platform: SocialPlatform) => {
     if (!currentConversation) return;
@@ -205,15 +182,16 @@ export default function ChatPage() {
         body: JSON.stringify({ llmModel: model, targetPlatform: platform }),
       });
       if (response.ok) {
-        await loadConversation();
-        await loadConversations();
+        const result = await response.json();
+        // Update current conversation state directly instead of reloading
+        setCurrentConversation(result.conversation);
       }
     } catch (error) {
       console.error('Failed to update settings:', error);
     }
   };
 
-  if (authLoading) {
+  if (authLoading || conversationsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0c29] p-4">
         <div className="text-center max-w-md w-full">
@@ -236,7 +214,7 @@ export default function ChatPage() {
         currentConversationId={conversationId}
         user={user}
         onNewConversation={createNewConversation}
-        onDeleteConversation={deleteConversation}
+        onDeleteConversation={handleDeleteConversation}
         onRenameConversation={renameConversation}
       />
       

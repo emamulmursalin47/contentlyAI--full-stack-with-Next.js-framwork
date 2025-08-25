@@ -85,6 +85,14 @@ const messageSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'assistant', 'system'], required: true },
   content: { type: String, required: true },
   thinkingContent: { type: String }, // Added thinkingContent
+  metadata: {
+    platform: { type: String },
+    model: { type: String },
+    characterCount: { type: Number },
+    hashtags: { type: Number },
+    emojis: { type: Number },
+    optimizationScore: { type: Number }
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

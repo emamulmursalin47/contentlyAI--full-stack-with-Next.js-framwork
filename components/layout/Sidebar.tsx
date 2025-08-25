@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import { 
   MessageSquare, 
   Plus, 
@@ -15,14 +14,7 @@ import { Button } from '@/components/ui/button';
 import { format, isToday, isYesterday } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-interface Conversation {
-  id: string;
-  title: string;
-  updated_at: Date;
-  targetPlatform: string;
-  llmModel: string;
-}
+import { Conversation } from '@/lib/types';
 
 interface User {
   id: string;
@@ -95,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const groupedConversations = conversations.reduce((groups: { [key: string]: Conversation[] }, conversation) => {
-    const date = formatDate(new Date(conversation.updated_at));
+    const date = formatDate(new Date(conversation.updatedAt));
     if (!groups[date]) groups[date] = [];
     groups[date].push(conversation);
     return groups;
@@ -201,9 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  if (window.confirm('Are you sure?')) {
-                                    onDeleteConversation(conversation.id);
-                                  }
+                                  onDeleteConversation(conversation.id);
                                 }}
                                 className="p-1 text-indigo-300 hover:text-red-400 hover:bg-red-900/30 rounded transition-colors"
                                 title="Delete conversation"
@@ -242,13 +232,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 )
                               )}
                               {!isCollapsed && (
-                                <p className="text-xs text-indigo-300 truncate mt-1">
-                                  {conversation.targetPlatform} • {conversation.llmModel}
-                                </p>
-                              )}
-                              {!isCollapsed && (
                                 <p className="text-xs text-indigo-400 truncate mt-0.5">
-                                  Updated: {format(new Date(conversation.updated_at), 'MMM d, yyyy HH:mm')}
+                                  Updated: {format(new Date(conversation.updatedAt), 'MMM d, yyyy HH:mm')}
                                 </p>
                               )}
                             </div>

@@ -1,15 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import fetchWithAuth from '@/lib/fetchWithAuth';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  thinkingContent?: string;
-  created_at: Date;
-  isOptimistic?: boolean;
-  isThinking?: boolean;
-}
+import { Message, MessageResponse } from '@/lib/types';
 
 interface UseMessagesResult {
   messages: Message[];
@@ -26,7 +17,10 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const fetchMessages = useCallback(async () => {
-    if (!conversationId) return;
+    if (!conversationId || typeof conversationId !== 'string') {
+      setLoading(false);
+      return;
+    }
     
     try {
       setError(null);
@@ -34,13 +28,23 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
       
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.messages || []);
+        const parsedMessages = (data.messages || []).map((msg: any) => {
+          const dateString = msg.createdAt || msg.created_at;
+          return {
+            ...msg,
+            createdAt: dateString ? new Date(dateString) : new Date(),
+            conversationId: conversationId
+          };
+        });
+        setMessages(parsedMessages);
       } else {
-        throw new Error('Failed to fetch messages');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch messages' }));
+        throw new Error(errorData.error || 'Failed to fetch messages');
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
+      setMessages([]); // Reset messages on error
     } finally {
       setLoading(false);
     }
@@ -50,28 +54,35 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
     content: string, 
     options: { model?: string; platform?: string } = {}
   ) => {
-    if (!content.trim() || !conversationId) return;
+    if (!content || typeof content !== 'string' || !content.trim() || !conversationId) {
+      setError('Message content is required');
+      return;
+    }
 
+    const trimmedContent = content.trim();
     const tempId = `temp-${Date.now()}`;
     const optimisticUserMessage: Message = {
       id: tempId,
+      conversationId,
       role: 'user',
-      content: content.trim(),
-      created_at: new Date(),
+      content: trimmedContent,
+      createdAt: new Date(),
       isOptimistic: true
     };
 
     // Add optimistic user message
     setMessages(prev => [...prev, optimisticUserMessage]);
     setIsGenerating(true);
+    setError(null);
 
     // Add thinking indicator for AI response
     const thinkingId = `thinking-${Date.now()}`;
     const thinkingMessage: Message = {
       id: thinkingId,
+      conversationId,
       role: 'assistant',
       content: '',
-      created_at: new Date(),
+      createdAt: new Date(),
       isThinking: true,
       isOptimistic: true
     };
@@ -83,7 +94,7 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: content.trim(),
+          content: trimmedContent,
           role: 'user',
           model: options.model || 'llama-3.1-8b-instant',
           platform: options.platform || 'general'
@@ -91,7 +102,7 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data: MessageResponse = await response.json();
         
         // Remove optimistic messages and add real ones
         setMessages(prev => {
@@ -99,24 +110,32 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
             msg.id !== tempId && msg.id !== thinkingId
           );
           
-          const newMessages = [];
+          const newMessages: Message[] = [];
           if (data.userMessage) {
             newMessages.push({
               ...data.userMessage,
-              created_at: new Date(data.userMessage.createdAt || data.userMessage.created_at)
+              createdAt: data.userMessage.createdAt ? new Date(data.userMessage.createdAt) : new Date(),
+              conversationId
             });
           }
           if (data.aiMessage) {
             newMessages.push({
               ...data.aiMessage,
-              created_at: new Date(data.aiMessage.createdAt || data.aiMessage.created_at)
+              createdAt: data.aiMessage.createdAt ? new Date(data.aiMessage.createdAt) : new Date(),
+              conversationId
             });
           }
           
           return [...filtered, ...newMessages];
         });
+
+        // Handle AI generation error but successful user message save
+        if (data.error && !data.aiMessage) {
+          setError(`AI Response: ${data.error}`);
+        }
       } else {
-        throw new Error('Failed to send message');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to send message' }));
+        throw new Error(errorData.error || 'Failed to send message');
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -132,11 +151,19 @@ export const useMessages = (conversationId: string): UseMessagesResult => {
     }
   }, [conversationId]);
 
+  // Reset state when conversation changes
   useEffect(() => {
     if (conversationId) {
       setMessages([]);
       setLoading(true);
+      setError(null);
+      setIsGenerating(false);
       fetchMessages();
+    } else {
+      setMessages([]);
+      setLoading(false);
+      setError(null);
+      setIsGenerating(false);
     }
   }, [conversationId, fetchMessages]);
 

@@ -1,52 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect, { Conversation, Message } from '@/lib/mongodb'; // Import Message
-import { AuthService } from '@/lib/auth'; // Import AuthService
-import { revalidatePath } from 'next/cache';
+import dbConnect, { User, Conversation, Message } from '@/lib/mongodb';
+import { AuthService } from '@/lib/auth';
+import { adminAuth } from '@/lib/firebaseAdmin';
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+async function authenticateUser(request: NextRequest): Promise<string | null> {
+  // Try Firebase authentication first
+  const authorizationHeader = request.headers.get('Authorization');
+  const firebaseIdToken = authorizationHeader?.startsWith('Bearer ')
+    ? authorizationHeader.split(' ')[1]
+    : null;
+
+  if (firebaseIdToken) {
+    try {
+      const decodedToken = await adminAuth.verifyIdToken(firebaseIdToken);
+      const user = await User.findOne({ firebaseUid: decodedToken.uid });
+      
+      if (user) {
+        return user._id.toString();
+      }
+    } catch (firebaseError) {
+      console.error('Firebase authentication failed:', firebaseError);
+      // Fall through to token authentication
+    }
+  }
+
+  // Try token authentication
+  const accessToken = request.cookies.get('access_token')?.value;
+  if (accessToken) {
+    try {
+      const payload = AuthService.verifyAccessToken(accessToken);
+      return payload?.userId || null;
+    } catch (tokenError) {
+      console.error('Token authentication failed:', tokenError);
+    }
+  }
+  
+  return null;
+}
+
+function setCorsHeaders(response: NextResponse): NextResponse {
+  response.headers.set('Access-Control-Allow-Origin', APP_URL);
+  response.headers.set('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  return response;
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect(); // Connect to MongoDB
+    await dbConnect();
 
-    const accessToken = request.cookies.get('access_token')?.value;
-    const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
-    const userId = payload?.userId;
-
+    const userId = await authenticateUser(request);
     const { id: conversationId } = await params;
 
     console.log(`[GET /api/conversations/${conversationId}] Received request for conversation ID: ${conversationId}, User ID: ${userId}`);
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return setCorsHeaders(response);
+    }
+
+    if (!conversationId || typeof conversationId !== 'string') {
+      const response = NextResponse.json({ error: 'Invalid conversation ID' }, { status: 400 });
+      return setCorsHeaders(response);
     }
 
     const conversation = await Conversation.findOne({ _id: conversationId, userId });
 
     if (!conversation) {
       console.log(`[GET /api/conversations/${conversationId}] Conversation not found for ID: ${conversationId}, User ID: ${userId}`);
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      const response = NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return setCorsHeaders(response);
     }
 
     const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
     console.log(`[GET /api/conversations/${conversationId}] Found ${messages.length} messages for conversation ID: ${conversationId}`);
 
-    const finalResponse = NextResponse.json({ conversation: { ...conversation.toObject(), id: conversation._id.toString() }, messages: messages.map(msg => ({ ...msg.toObject(), id: msg._id.toString() })) });
-    finalResponse.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    finalResponse.headers.set('Access-Control-Allow-Methods', 'GET, HEAD');
-    finalResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    finalResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-    return finalResponse;
+    const responseData = {
+      conversation: {
+        ...conversation.toObject(),
+        id: conversation._id.toString(),
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString()
+      },
+      messages: messages.map(msg => ({
+        ...msg.toObject(),
+        id: msg._id.toString(),
+        createdAt: msg.createdAt.toISOString()
+      }))
+    };
+
+    const finalResponse = NextResponse.json(responseData);
+    // Disable caching for real-time updates
+    finalResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    finalResponse.headers.set('Pragma', 'no-cache');
+    finalResponse.headers.set('Expires', '0');
+    return setCorsHeaders(finalResponse);
 
   } catch (error) {
     console.error('Conversation fetch error:', error);
-    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, HEAD');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    return response;
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const response = NextResponse.json({ error: errorMessage }, { status: 500 });
+    return setCorsHeaders(response);
   }
 }
 
@@ -55,34 +115,73 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect(); // Connect to MongoDB
+    await dbConnect();
 
-    const accessToken = request.cookies.get('access_token')?.value;
-    const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
-    const userId = payload?.userId;
-
+    const userId = await authenticateUser(request);
     const { id: conversationId } = await params;
 
     if (!userId) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-      response.headers.set('Access-Control-Allow-Methods', 'PUT');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      return response;
+      return setCorsHeaders(response);
     }
 
-    const { title, llmModel, targetPlatform } = await request.json();
+    if (!conversationId || typeof conversationId !== 'string') {
+      const response = NextResponse.json({ error: 'Invalid conversation ID' }, { status: 400 });
+      return setCorsHeaders(response);
+    }
 
-    const updateFields: { title?: string; llmModel?: string; targetPlatform?: string; updatedAt: Date } = { updatedAt: new Date() };
-    if (title !== undefined) updateFields.title = title;
-    if (llmModel !== undefined) updateFields.llmModel = llmModel;
-    if (targetPlatform !== undefined) updateFields.targetPlatform = targetPlatform;
+    const body = await request.json();
+    const { title, llmModel, targetPlatform } = body;
+
+    const updateFields: { 
+      title?: string; 
+      llmModel?: string; 
+      targetPlatform?: string; 
+      updatedAt: Date 
+    } = { updatedAt: new Date() };
+
+    // Validate and set title
+    if (title !== undefined) {
+      if (typeof title !== 'string' || title.trim().length === 0) {
+        const response = NextResponse.json(
+          { error: 'Title must be a non-empty string' },
+          { status: 400 }
+        );
+        return setCorsHeaders(response);
+      }
+      updateFields.title = title.trim();
+    }
+
+    // Validate and set llmModel
+    if (llmModel !== undefined) {
+      const validModels = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma-7b-it', 'deepseek-r1-distill-llama-70b'];
+      if (!validModels.includes(llmModel)) {
+        const response = NextResponse.json(
+          { error: 'Invalid LLM model' },
+          { status: 400 }
+        );
+        return setCorsHeaders(response);
+      }
+      updateFields.llmModel = llmModel;
+    }
+
+    // Validate and set targetPlatform
+    if (targetPlatform !== undefined) {
+      const validPlatforms = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'general'];
+      if (!validPlatforms.includes(targetPlatform)) {
+        const response = NextResponse.json(
+          { error: 'Invalid target platform' },
+          { status: 400 }
+        );
+        return setCorsHeaders(response);
+      }
+      updateFields.targetPlatform = targetPlatform;
+    }
 
     const conversation = await Conversation.findOneAndUpdate(
       { _id: conversationId, userId },
       updateFields,
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!conversation) {
@@ -90,29 +189,26 @@ export async function PUT(
         { error: 'Conversation not found or unauthorized' },
         { status: 404 }
       );
-      response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-      response.headers.set('Access-Control-Allow-Methods', 'PUT');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      return response;
+      return setCorsHeaders(response);
     }
 
-    const finalResponse = NextResponse.json({ conversation: { ...conversation.toObject(), id: conversation._id.toString() } });
-    finalResponse.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    finalResponse.headers.set('Access-Control-Allow-Methods', 'PUT');
-    finalResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    finalResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-    revalidatePath('/chat'); // Revalidate the /chat path to update the sidebar
-    return finalResponse;
+    const responseData = {
+      conversation: {
+        ...conversation.toObject(),
+        id: conversation._id.toString(),
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString()
+      }
+    };
+
+    const finalResponse = NextResponse.json(responseData);
+    return setCorsHeaders(finalResponse);
 
   } catch (error) {
     console.error('Conversation update API error:', error);
-    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    response.headers.set('Access-Control-Allow-Methods', 'PUT');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    return response;
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const response = NextResponse.json({ error: errorMessage }, { status: 500 });
+    return setCorsHeaders(response);
   }
 }
 
@@ -121,55 +217,52 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect(); // Connect to MongoDB
+    await dbConnect();
 
-    const accessToken = request.cookies.get('access_token')?.value;
-    const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
-    const userId = payload?.userId;
-
+    const userId = await authenticateUser(request);
     const { id: conversationId } = await params;
 
-    console.log('Attempting to delete conversation on backend. ID:', conversationId, 'User ID:', userId); // Add this line
+    console.log('Attempting to delete conversation on backend. ID:', conversationId, 'User ID:', userId);
 
     if (!userId) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-      response.headers.set('Access-Control-Allow-Methods', 'DELETE');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      return response;
+      return setCorsHeaders(response);
     }
 
-    const result = await Conversation.deleteOne({ _id: conversationId, userId });
+    if (!conversationId || typeof conversationId !== 'string') {
+      const response = NextResponse.json({ error: 'Invalid conversation ID' }, { status: 400 });
+      return setCorsHeaders(response);
+    }
 
-    console.log('Delete result:', result); // Add this line
+    // Delete the conversation
+    const result = await Conversation.deleteOne({ _id: conversationId, userId });
+    console.log('Delete result:', result);
 
     if (result.deletedCount === 0) {
       const response = NextResponse.json(
         { error: 'Conversation not found or unauthorized' },
         { status: 404 }
       );
-      response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-      response.headers.set('Access-Control-Allow-Methods', 'DELETE');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-      return response;
+      return setCorsHeaders(response);
     }
 
-    const finalResponse = NextResponse.json({ message: 'Conversation deleted successfully' });
-    finalResponse.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    finalResponse.headers.set('Access-Control-Allow-Methods', 'DELETE');
-    finalResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    finalResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-    return finalResponse;
+    // Also delete associated messages
+    await Message.deleteMany({ conversationId });
+
+    const finalResponse = NextResponse.json({ 
+      message: 'Conversation and associated messages deleted successfully' 
+    });
+    return setCorsHeaders(finalResponse);
 
   } catch (error) {
     console.error('Conversation deletion API error:', error);
-    const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
-    response.headers.set('Access-Control-Allow-Methods', 'DELETE');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    return response;
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const response = NextResponse.json({ error: errorMessage }, { status: 500 });
+    return setCorsHeaders(response);
   }
+}
+
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 });
+  return setCorsHeaders(response);
 }

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-
-import dbConnect, { Conversation, User } from '@/lib/mongodb';
+import dbConnect, { User, Conversation } from '@/lib/mongodb';
 import { AuthService } from '@/lib/auth';
 import { adminAuth } from '@/lib/firebaseAdmin';
 
@@ -116,8 +114,10 @@ export async function GET(request: NextRequest) {
     
     const finalResponse = NextResponse.json(responseData);
     
-    // Add cache headers for better performance
-    finalResponse.headers.set('Cache-Control', 'private, max-age=30');
+    // Disable caching for real-time updates
+    finalResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    finalResponse.headers.set('Pragma', 'no-cache');
+    finalResponse.headers.set('Expires', '0');
     finalResponse.headers.set('Access-Control-Allow-Origin', APP_URL);
     finalResponse.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
     finalResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');

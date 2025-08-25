@@ -1,9 +1,55 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect, { Conversation, Message } from '@/lib/mongodb';
+import dbConnect, { Conversation, User, Message } from '@/lib/mongodb';
 import { groqService, LLMModel, SocialPlatform, GroqMessage } from '@/lib/groq';
 import { AuthService } from '@/lib/auth';
+import { adminAuth } from '@/lib/firebaseAdmin';
 import { measureAsync, perfMonitor } from '@/lib/performance';
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+async function authenticateUser(request: NextRequest): Promise<string | null> {
+  // Try Firebase authentication first
+  const authorizationHeader = request.headers.get('Authorization');
+  const firebaseIdToken = authorizationHeader?.startsWith('Bearer ')
+    ? authorizationHeader.split(' ')[1]
+    : null;
+
+  if (firebaseIdToken) {
+    try {
+      const decodedToken = await adminAuth.verifyIdToken(firebaseIdToken);
+      const user = await User.findOne({ firebaseUid: decodedToken.uid });
+      
+      if (user) {
+        return user._id.toString();
+      }
+    } catch (firebaseError) {
+      console.error('Firebase authentication failed:', firebaseError);
+      // Fall through to token authentication
+    }
+  }
+
+  // Try token authentication
+  const accessToken = request.cookies.get('access_token')?.value;
+  if (accessToken) {
+    try {
+      const payload = AuthService.verifyAccessToken(accessToken);
+      return payload?.userId || null;
+    } catch (tokenError) {
+      console.error('Token authentication failed:', tokenError);
+    }
+  }
+  
+  return null;
+}
+
+function setCorsHeaders(response: NextResponse): NextResponse {
+  response.headers.set('Access-Control-Allow-Origin', APP_URL);
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  return response;
+}
 
 // Platform-specific content guidelines
 type PlatformGuidelines = {
@@ -81,7 +127,9 @@ function extractThinkingContent(text: string): { mainContent: string; thinkingCo
 function getPlatformSpecificPrompt(platform: SocialPlatform, _model: LLMModel): string {
   const guidelines = PLATFORM_GUIDELINES[platform] || PLATFORM_GUIDELINES.general;
   
-  const prompt = `You are an expert social media content creator specializing in ${platform}. Create engaging, platform-optimized content.
+  const prompt = `You are ContentlyAI, an expert social media content creation assistant. Your goal is to be helpful, creative, and conversational.
+
+When the user asks for content, create engaging, platform-optimized content for ${platform}.
 
 ## CRITICAL GUIDELINES:
 - STRICTLY adhere to ${platform}'s best practices
@@ -123,15 +171,18 @@ export async function GET(
     try {
       await dbConnect();
 
-      const accessToken = request.cookies.get('access_token')?.value;
-      const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
-      const userId = payload?.userId;
-
+      const userId = await authenticateUser(request);
       const { id } = await params;
       const conversationId = id;
 
       if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return setCorsHeaders(response);
+      }
+
+      if (!conversationId || typeof conversationId !== 'string') {
+        const response = NextResponse.json({ error: 'Invalid conversation ID' }, { status: 400 });
+        return setCorsHeaders(response);
       }
 
       const conversation = await measureAsync('db-find-conversation', () =>
@@ -139,19 +190,30 @@ export async function GET(
       );
 
       if (!conversation) {
-        return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+        const response = NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+        return setCorsHeaders(response);
       }
 
       const messages = await measureAsync('db-find-messages', () =>
         Message.find({ conversationId }).sort({ createdAt: 1 })
       );
 
-      const response = NextResponse.json({ messages });
-      response.headers.set('Cache-Control', 'private, max-age=10'); // Cache for 10 seconds
-      return response;
+      const responseData = {
+        messages: messages.map(msg => ({
+          ...msg.toObject(),
+          id: msg._id.toString(),
+          createdAt: msg.createdAt.toISOString()
+        }))
+      };
+
+      const response = NextResponse.json(responseData);
+      response.headers.set('Cache-Control', 'private, max-age=10');
+      return setCorsHeaders(response);
     } catch (error) {
       console.error('Messages fetch error:', error);
-      return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
+      const response = NextResponse.json({ error: errorMessage }, { status: 500 });
+      return setCorsHeaders(response);
     }
   });
 }
@@ -163,117 +225,182 @@ export async function POST(
   try {
     await dbConnect();
 
-    const accessToken = request.cookies.get('access_token')?.value;
-    const payload = accessToken ? AuthService.verifyAccessToken(accessToken) : null;
-    const userId = payload?.userId;
-
+    const userId = await authenticateUser(request);
     const { id } = await params;
     const conversationId = id;
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return setCorsHeaders(response);
     }
 
-    const { content, role, model = 'llama-3.1-8b-instant', platform = 'general' } = await request.json();
+    if (!conversationId || typeof conversationId !== 'string') {
+      const response = NextResponse.json({ error: 'Invalid conversation ID' }, { status: 400 });
+      return setCorsHeaders(response);
+    }
 
-    if (!content || !role) {
-      return NextResponse.json({ error: 'Content and role are required' }, { status: 400 });
+    const body = await request.json();
+    const { content, role, model = 'llama-3.1-8b-instant', platform = 'general' } = body;
+
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      const response = NextResponse.json({ error: 'Content is required and must be a non-empty string' }, { status: 400 });
+      return setCorsHeaders(response);
+    }
+
+    if (!role || !['user', 'assistant', 'system'].includes(role)) {
+      const response = NextResponse.json({ error: 'Valid role is required (user, assistant, or system)' }, { status: 400 });
+      return setCorsHeaders(response);
+    }
+
+    // Validate model
+    const validModels = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma-7b-it', 'deepseek-r1-distill-llama-70b'];
+    if (!validModels.includes(model)) {
+      const response = NextResponse.json({ error: 'Invalid model specified' }, { status: 400 });
+      return setCorsHeaders(response);
+    }
+
+    // Validate platform
+    const validPlatforms = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube', 'general'];
+    if (!validPlatforms.includes(platform)) {
+      const response = NextResponse.json({ error: 'Invalid platform specified' }, { status: 400 });
+      return setCorsHeaders(response);
     }
 
     const conversation = await Conversation.findOne({ _id: conversationId, userId });
 
     if (!conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      const response = NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return setCorsHeaders(response);
     }
 
-    // Save user message
-    const userMessage = await Message.create({
-      conversationId,
-      role,
-      content,
-      metadata: {
-        platform,
-        model,
-        characterCount: content.length
-      }
-    });
+    if (role !== 'user') {
+      // Just save non-user messages and return
+      const message = await Message.create({
+        conversationId,
+        role,
+        content: content.trim(),
+        metadata: { platform, model, characterCount: content.trim().length }
+      });
 
-    // If it's a user message, generate AI response
-    if (role === 'user') {
-      try {
-        const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
+      const responseData = {
+        userMessage: {
+          ...message.toObject(),
+          id: message._id.toString(),
+          createdAt: message.createdAt.toISOString()
+        }
+      };
 
-        // Enhanced system prompt for social media
-        const systemPrompt = getPlatformSpecificPrompt(platform as SocialPlatform, model as LLMModel);
-
-        const groqMessages: GroqMessage[] = [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          ...(messages?.map(msg => ({
-            role: msg.role as 'user' | 'assistant' | 'system',
-            content: msg.content
-          })) || []),
-        ];
-
-
-        
-        const aiResponse = await groqService.generateContent(
-          groqMessages,
-          model as LLMModel,
-          platform as SocialPlatform
-        );
-
-        const { mainContent, thinkingContent } = extractThinkingContent(aiResponse);
-
-        // Analyze the generated content
-        const characterCount = mainContent.length;
-        const hashtags = (mainContent.match(/#\w+/g) || []).length;
-        const emojis = (mainContent.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu) || []).length;
-
-        const aiMessage = await Message.create({
-          conversationId,
-          role: 'assistant',
-          content: mainContent,
-          thinkingContent: thinkingContent,
-          metadata: {
-            platform,
-            model,
-            characterCount,
-            hashtags,
-            emojis,
-            optimizationScore: calculateOptimizationScore(mainContent, platform as SocialPlatform)
-          }
-        });
-
-        return NextResponse.json({ 
-          userMessage,
-          aiMessage,
-          analytics: {
-            characterCount,
-            hashtags,
-            emojis,
-            platformSuitability: checkPlatformSuitability(mainContent, platform as SocialPlatform)
-          }
-        }, { status: 201 });
-
-      } catch (aiError) {
-        console.error('AI generation error:', aiError);
-        return NextResponse.json({ 
-          userMessage,
-          aiMessage: null,
-          error: 'Failed to generate AI response'
-        }, { status: 201 });
-      }
+      const response = NextResponse.json(responseData, { status: 201 });
+      return setCorsHeaders(response);
     }
 
-    return NextResponse.json({ userMessage }, { status: 201 });
+    // Role is 'user', so generate AI response
+    try {
+      const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
 
+      const systemPrompt = getPlatformSpecificPrompt(platform as SocialPlatform, model as LLMModel);
+
+      const groqMessages: GroqMessage[] = [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(msg => ({
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content
+        })),
+        { role: 'user', content: content.trim() }
+      ];
+      
+      const aiResponse = await groqService.generateContent(
+        groqMessages,
+        model as LLMModel,
+        platform as SocialPlatform
+      );
+
+      const { mainContent, thinkingContent } = extractThinkingContent(aiResponse);
+
+      // Save user message
+      const userMessage = await Message.create({
+        conversationId,
+        role,
+        content: content.trim(),
+        metadata: { platform, model, characterCount: content.trim().length }
+      });
+
+      const characterCount = mainContent.length;
+      const hashtags = (mainContent.match(/#\w+/g) || []).length;
+      const emojis = (mainContent.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu) || []).length;
+
+      // Save AI message
+      const aiMessage = await Message.create({
+        conversationId,
+        role: 'assistant',
+        content: mainContent,
+        thinkingContent: thinkingContent,
+        metadata: {
+          platform,
+          model,
+          characterCount,
+          hashtags,
+          emojis,
+          optimizationScore: calculateOptimizationScore(mainContent, platform as SocialPlatform)
+        }
+      });
+
+      const responseData = {
+        userMessage: {
+          ...userMessage.toObject(),
+          id: userMessage._id.toString(),
+          createdAt: userMessage.createdAt.toISOString()
+        },
+        aiMessage: {
+          ...aiMessage.toObject(),
+          id: aiMessage._id.toString(),
+          createdAt: aiMessage.createdAt.toISOString()
+        },
+        analytics: {
+          characterCount,
+          hashtags,
+          emojis,
+          platformSuitability: checkPlatformSuitability(mainContent, platform as SocialPlatform)
+        }
+      };
+
+      const response = NextResponse.json(responseData, { status: 201 });
+      return setCorsHeaders(response);
+
+    } catch (aiError) {
+      console.error('AI generation error:', aiError);
+      // Save user message even if AI fails
+      const userMessage = await Message.create({
+        conversationId,
+        role,
+        content: content.trim(),
+        metadata: { platform, model, characterCount: content.trim().length }
+      });
+
+      const responseData = {
+        userMessage: {
+          ...userMessage.toObject(),
+          id: userMessage._id.toString(),
+          createdAt: userMessage.createdAt.toISOString()
+        },
+        aiMessage: null,
+        error: 'Failed to generate AI response'
+      };
+
+      const response = NextResponse.json(responseData, { status: 201 });
+      return setCorsHeaders(response);
+    }
   } catch (error) {
     console.error('Message creation error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const response = NextResponse.json({ error: errorMessage }, { status: 500 });
+    return setCorsHeaders(response);
   }
+}
+
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 });
+  return setCorsHeaders(response);
 }
 
 // Helper functions for content analysis
