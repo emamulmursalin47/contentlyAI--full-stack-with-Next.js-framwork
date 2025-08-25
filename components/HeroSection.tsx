@@ -1,167 +1,115 @@
 'use client';
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Zap, Star } from 'lucide-react';
+import { ArrowRight, Zap, Star } from 'lucide-react';
 import { WavyBackground } from './ui/wavy-background';
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
 
 export default function HeroSection() {
-  const text = "Welcome to Contently AI";
+  const text = "Contently AI";
   const words = text.split(" ");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
+  
   return (
     <WavyBackground
-      className="h-full overflow-y-auto pt-16 flex items-center justify-center"
-      backgroundFill="#0f0c29"
-      waveWidth={80}
-      colors={["#302b63", "#24243e", "#5f3dc4", "#7950f2", "#9775fa"]}
-      blur={12}
-      speed="medium"
-      waveOpacity={0.4}
+      className="min-h-screen flex items-center justify-center relative"
+      backgroundFill="#0a0a1a"
+      waveWidth={100}
+      colors={["#1e1b4b", "#312e81", "#4c1d95", "#5b21b6", "#6d28d9"]}
+      blur={10}
+      speed="slow"
+      waveOpacity={0.3}
     >
-      {/* Floating elements */}
-      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(8)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm"
-            style={{
-              width: `${Math.random() * 100 + 20}px`,
-              height: `${Math.random() * 100 + 20}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [0, Math.random() * 100 - 50],
-              y: [0, Math.random() * 100 - 50],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div> */}
-
-      <div className="text-center z-20 max-w-6xl mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 bg-indigo-900/30 backdrop-blur-sm border border-indigo-700/50 rounded-full px-4 py-2 mb-8"
-        >
-          <Sparkles className="h-5 w-5 text-indigo-300" />
-          <span className="text-indigo-200 font-medium">Revolutionizing Content Creation</span>
-        </motion.div>
-
-        <motion.h1
-          className="text-5xl sm:text-7xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300 mb-6 leading-tight"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0"></div>
+      
+      <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-20 text-center">
+        {/* Main heading with refined typography */}
+        <h1
+          className="text-2xl xs:text-3xl sm:text-4xl md:text-7xl font-bold mb-6 sm:mb-8 pt-8 xs:pt-10 sm:pt-12 md:pt-20 leading-tight"
         >
           {words.map((word, i) => (
-            <motion.span
+            <span
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="inline-block"
+              className="inline-block mr-0.5 sm:mr-1 md:mr-2"
             >
-              {word}{" "}
-            </motion.span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-indigo-200 to-purple-200">
+                {word}
+              </span>
+            </span>
           ))}
-        </motion.h1>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0, ease: 'easeInOut' }}
-          className="relative"
+        </h1>
+        
+        {/* Subtitle with elegant divider */}
+        <div
+          className="mb-8 sm:mb-10"
         >
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-indigo-700/30"></div>
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <div className="h-px bg-indigo-700/30 w-12 sm:w-16"></div>
+            <span className="text-indigo-300 text-xs sm:text-sm font-medium tracking-wider uppercase">AI-Powered Excellence</span>
+            <div className="h-px bg-indigo-700/30 w-12 sm:w-16"></div>
           </div>
-          <div className="relative flex justify-center">
-            <span className="px-6 bg-transparent text-indigo-300 text-lg font-medium">AI-Powered Excellence</span>
-          </div>
-        </motion.div>
-
+          
+          <p className="text-sm sm:text-base md:text-2xl text-indigo-100 font-light max-w-3xl mx-auto leading-relaxed px-2">
+            Your ultimate AI-powered content creation companion
+          </p>
+        </div>
+        
+        {/* Description with refined styling */}
         <p
-          className="text-xl md:text-2xl text-indigo-200 mb-8 max-w-3xl mx-auto mt-8"
-        >
-          Your ultimate AI-powered content creation companion.
-        </p>
-
-        <p
-          className="text-lg md:text-xl text-indigo-100/80 mb-12 max-w-2xl mx-auto"
+          className="text-xs sm:text-sm md:text-lg text-indigo-200/80 mb-8 sm:mb-10 md:mb-14 max-w-2xl mx-auto leading-relaxed px-4"
         >
           Generate captivating social media posts, engaging captions, and compelling copy in seconds,
           tailored for every platform.
         </p>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0, ease: 'easeInOut' }}
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+        
+        {/* CTA buttons with sophisticated design */}
+        <div
+          className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center items-center w-full px-4"
         >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative group"
+          <div
+            className="relative group transition-transform hover:-translate-y-1 w-full sm:w-auto"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
-            <Link href="/register" className="relative flex items-center gap-2 px-6 py-3 bg-indigo-900 rounded-lg leading-none ">
-              <span className="text-indigo-100 font-semibold text-base">Start Creating Free</span>
-              <ArrowRight className="ml-2 h-5 w-5 text-indigo-300" />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <Link 
+              href="/register" 
+              className="relative flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 bg-indigo-900 rounded-xl leading-none w-full"
+            >
+              <span className="text-indigo-50 font-medium text-sm sm:text-base">Start Creating Free</span>
+              <ArrowRight className="ml-1 h-5 w-5 text-indigo-300 group-hover:text-white transition-colors" />
             </Link>
-          </motion.div>
-
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative group"
+          </div>
+          
+          <div
+            className="relative group transition-transform hover:-translate-y-1 w-full sm:w-auto"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-transparent to-indigo-600/30 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <Link href="/login" className="relative flex items-center gap-2 px-6 py-3 bg-indigo-900/50 backdrop-blur-sm border border-indigo-700/50 rounded-lg leading-none">
-              <span className="text-indigo-200 font-medium text-base">Sign In</span>
-              <Zap className="ml-2 h-5 w-5 text-indigo-300" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-indigo-600/20 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <Link 
+              href="/login" 
+              className="relative flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 bg-indigo-900/30 backdrop-blur-sm border border-indigo-700/30 rounded-xl leading-none w-full"
+            >
+              <span className="text-indigo-200 font-medium text-sm sm:text-base">Sign In</span>
+              <Zap className="ml-1 h-5 w-5 text-indigo-300 group-hover:text-white transition-colors" />
             </Link>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0 }}
-          className="mt-16 flex flex-wrap justify-center gap-4"
+          </div>
+        </div>
+        
+        {/* Feature tags with refined design */}
+        <div
+          className="mt-10 sm:mt-12 md:mt-16 flex flex-wrap justify-center gap-2 sm:gap-3 px-4"
         >
           {["AI-Powered", "Multi-Platform", "Time-Saving", "SEO Optimized"].map((tag, i) => (
-            <motion.div
+            <div
               key={i}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-900/30 backdrop-blur-sm border border-indigo-700/30 rounded-full"
-              whileHover={{ y: -5 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0 + i * 0.1 }}
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 backdrop-blur-sm border border-indigo-700/20 rounded-full transition-all hover:bg-indigo-700/20 hover:-translate-y-1"
             >
-              <Star className="h-4 w-4 text-indigo-400" />
-              <span className="text-indigo-200 text-sm">{tag}</span>
-            </motion.div>
+              <Star className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-400" />
+              <span className="text-indigo-200 text-xs sm:text-sm font-medium">{tag}</span>
+            </div>
           ))}
-        </motion.div>
+        </div>
+        
+        {/* Subtle decorative elements */}
+        <div className="hidden md:block absolute top-10 left-10 w-20 h-20 rounded-full bg-purple-500/10 blur-xl"></div>
+        <div className="hidden md:block absolute bottom-20 right-10 w-32 h-32 rounded-full bg-indigo-500/10 blur-xl"></div>
       </div>
     </WavyBackground>
   );
 }
-

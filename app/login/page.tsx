@@ -66,38 +66,14 @@ export default function LoginPage() {
   }
 
   return (
-    <BackgroundLines className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Floating elements */}
-      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 backdrop-blur-sm"
-            style={{
-              width: `${Math.random() * 100 + 20}px`,
-              height: `${Math.random() * 100 + 20}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [0, Math.random() * 100 - 50],
-              y: [0, Math.random() * 100 - 50],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div> */}
+    <BackgroundLines className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex justify-center sm:items-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+     
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md z-20 w-full"
+        className="max-w-md z-20 w-full pt-16 sm:pt-0"
       >
         <Card className="bg-[#302b63]/30 backdrop-blur-sm border border-indigo-700/30 rounded-2xl shadow-xl p-8 relative overflow-hidden">
           {/* Glow effect */}
@@ -107,12 +83,12 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6 sm:mb-8">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex justify-center mb-4"
+                className="flex justify-center mb-3 sm:mb-4"
               >
              <Link href="/">
           <div className="flex items-center justify-center h-16 w-32 rounded-2xl bg-transparent backdrop-blur-xl border border-white/20 cursor-pointer"
@@ -123,14 +99,14 @@ export default function LoginPage() {
             }}
           >
            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] flex items-center justify-center mr-2">
-                <span className="text-white font-bold text-xl">Contently</span>
+                <span className="text-white font-bold text-lg sm:text-xl">Contently</span>
               </div>
           </div>
         </Link>
               </motion.div>
               
               <motion.h2 
-                className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300"
+                className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
@@ -139,7 +115,7 @@ export default function LoginPage() {
               </motion.h2>
               
               <motion.p 
-                className="mt-3 text-indigo-200"
+                className="mt-3 text-sm sm:text-base text-indigo-200"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
@@ -153,11 +129,11 @@ export default function LoginPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              className="mb-6"
+              className="mb-4 sm:mb-6"
             >
               <Button
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2 bg-transparent border-indigo-600/50 text-indigo-200 hover:bg-[#5f3dc4]/20 hover:text-white transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 bg-transparent border-indigo-600/50 text-sm sm:text-base text-indigo-200 hover:bg-[#5f3dc4]/20 hover:text-white transition-all duration-300"
                 onClick={() => signInWithGoogle()}
               >
                 <SiGoogle className="h-5 w-5" /> Sign in with Google
@@ -168,7 +144,7 @@ export default function LoginPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="relative mb-6"
+              className="relative mb-4 sm:mb-6"
             >
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-indigo-700/30"></div>
@@ -182,7 +158,7 @@ export default function LoginPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.7 }}
-              className="space-y-5"
+              className="space-y-4 sm:space-y-5"
               onSubmit={handleSubmit}
             >
               {error && (
@@ -195,8 +171,8 @@ export default function LoginPage() {
                 </motion.div>
               )}
               
-              <div className="space-y-4">
-                <Label htmlFor="email" className="text-indigo-200">Email address</Label>
+              <div className="space-y-3 sm:space-y-4">
+                <Label htmlFor="email" className="text-sm sm:text-base text-indigo-200">Email address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -209,7 +185,7 @@ export default function LoginPage() {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <Label htmlFor="password" className="text-indigo-200">Password</Label>
+                    <Label htmlFor="password" className="text-sm sm:text-base text-indigo-200">Password</Label>
                     <Link href="/forgot-password" className="text-sm text-[#9775fa] hover:text-[#b794f4] transition-colors">
                       Forgot password?
                     </Link>
@@ -241,14 +217,14 @@ export default function LoginPage() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-[0_0_20px_5px_rgba(124,58,237,0.3)] transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] text-sm sm:text-base text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-[0_0_20px_5px_rgba(124,58,237,0.3)] transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
               </motion.div>
 
-              <div className="text-center mt-4">
+              <div className="text-center mt-3 sm:mt-4">
                 <p className="text-sm text-indigo-300">
                   Don&apos;t have an account?{' '}
                   <Link href="/register" className="font-medium text-[#9775fa] hover:text-[#b794f4] transition-colors">

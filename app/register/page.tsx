@@ -111,7 +111,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <BackgroundLines className="min-h-screen  bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
+    <BackgroundLines className="min-h-screen  bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex justify-center sm:items-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       {/* Floating elements */}
       {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
@@ -142,9 +142,9 @@ export default function RegisterPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md  z-20 w-full"
+        className="max-w-md  z-20 w-full pt-16 sm:pt-0"
       >
-        <Card className="bg-[#302b63]/30 mt-20 backdrop-blur-sm border border-indigo-700/30 rounded-2xl shadow-xl p-8 relative overflow-hidden">
+        <Card className="bg-[#302b63]/30 mt-8 sm:mt-20 backdrop-blur-sm border border-indigo-700/30 rounded-2xl shadow-xl p-8 relative overflow-hidden">
           {/* Glow effect */}
           <div className="absolute inset-0 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#7950f2]/10 to-[#5f3dc4]/10"></div>
@@ -152,12 +152,12 @@ export default function RegisterPage() {
           </div>
 
           <div className="relative  z-10">
-            <div className="text-center  mb-8">
+            <div className="text-center  mb-6 sm:mb-8">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex  justify-center mb-4"
+                className="flex  justify-center mb-3 sm:mb-4"
               >
                 <Link href="/">
           <div className="flex items-center justify-center h-16 w-32 rounded-2xl bg-transparent backdrop-blur-xl border border-white/20 cursor-pointer"
@@ -168,14 +168,14 @@ export default function RegisterPage() {
             }}
           >
            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] flex items-center justify-center mr-2">
-                <span className="text-white font-bold text-xl">Contently</span>
+                <span className="text-white font-bold text-lg sm:text-xl">Contently</span>
               </div>
           </div>
         </Link>
               </motion.div>
               
               <motion.h2 
-                className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300"
+                className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-300 to-purple-300"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
@@ -184,7 +184,7 @@ export default function RegisterPage() {
               </motion.h2>
               
               <motion.p 
-                className="mt-3 text-indigo-200"
+                className="mt-3 text-sm sm:text-base text-indigo-200"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
@@ -198,11 +198,11 @@ export default function RegisterPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              className="mb-6"
+              className="mb-4 sm:mb-6"
             >
               <Button
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2 bg-transparent border-indigo-600/50 text-indigo-200 hover:bg-[#5f3dc4]/20 hover:text-white transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 bg-transparent border-indigo-600/50 text-sm sm:text-base text-indigo-200 hover:bg-[#5f3dc4]/20 hover:text-white transition-all duration-300"
                 onClick={() => signInWithGoogle()}
               >
                 <SiGoogle className="h-5 w-5" /> Sign up with Google
@@ -213,7 +213,7 @@ export default function RegisterPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="relative mb-6"
+              className="relative mb-4 sm:mb-6"
             >
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-indigo-700/30"></div>
@@ -227,7 +227,7 @@ export default function RegisterPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.7 }}
-              className="space-y-5"
+              className="space-y-4 sm:space-y-5"
               onSubmit={handleSubmit}
             >
               {errors.submit && (
@@ -240,9 +240,9 @@ export default function RegisterPage() {
                 </motion.div>
               )}
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label htmlFor="fullName" className="text-indigo-200 flex items-center gap-2">
+                  <Label htmlFor="fullName" className="text-sm sm:text-base text-indigo-200 flex items-center gap-2">
                     <User className="h-4 w-4" /> Full name
                   </Label>
                   <Input
@@ -257,7 +257,7 @@ export default function RegisterPage() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="email" className="text-indigo-200 flex items-center gap-2">
+                  <Label htmlFor="email" className="text-sm sm:text-base text-indigo-200 flex items-center gap-2">
                     <Mail className="h-4 w-4" /> Email address
                   </Label>
                   <Input
@@ -272,7 +272,7 @@ export default function RegisterPage() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="password" className="text-indigo-200 flex items-center gap-2">
+                  <Label htmlFor="password" className="text-sm sm:text-base text-indigo-200 flex items-center gap-2">
                     <Lock className="h-4 w-4" /> Password
                   </Label>
                   <div className="relative mt-1">
@@ -296,7 +296,7 @@ export default function RegisterPage() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="confirmPassword" className="text-indigo-200 flex items-center gap-2">
+                  <Label htmlFor="confirmPassword" className="text-sm sm:text-base text-indigo-200 flex items-center gap-2">
                     <Lock className="h-4 w-4" /> Confirm password
                   </Label>
                   <div className="relative mt-1">
@@ -326,14 +326,14 @@ export default function RegisterPage() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-[0_0_20px_5px_rgba(124,58,237,0.3)] transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-[#7950f2] to-[#5f3dc4] text-sm sm:text-base text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-[0_0_20px_5px_rgba(124,58,237,0.3)] transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Creating account...' : 'Create account'}
                 </Button>
               </motion.div>
 
-              <div className="text-center mt-4">
+              <div className="text-center mt-3 sm:mt-4">
                 <p className="text-sm text-indigo-300">
                   Already have an account?{' '}
                   <Link href="/login" className="font-medium text-[#9775fa] hover:text-[#b794f4] transition-colors">
