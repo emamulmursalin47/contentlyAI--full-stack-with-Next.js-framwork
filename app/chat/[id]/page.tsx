@@ -290,7 +290,8 @@ export default function ChatPage() {
           </div>
         </header>
         
-        <div className="flex-1 overflow-y-auto bg-[#0f0c29]">
+        <div className="flex-1 overflow-y-auto bg-[#0f0c29] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-indigo-600/30 hover:scrollbar-thumb-indigo-500/50"
+             style={{ scrollbarWidth: 'thin' }}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full p-4">
               <div className="text-center max-w-md w-full">

@@ -176,3 +176,52 @@ body {
 .prevent-cls {
   contain: layout style paint;
 }
+
+/* Custom Scrollbar Styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-track-transparent {
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+}
+
+.scrollbar-thumb-indigo-600\/30 {
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+}
+
+.scrollbar-thumb-indigo-600\/50 {
+  scrollbar-color: rgba(124, 58, 237, 0.5) transparent;
+}
+
+.scrollbar-thumb-indigo-500\/50 {
+  scrollbar-color: rgba(99, 102, 241, 0.5) transparent;
+}
+
+.scrollbar-thumb-indigo-500\/70 {
+  scrollbar-color: rgba(99, 102, 241, 0.7) transparent;
+}
+
+/* Webkit scrollbar styles for better cross-browser support */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(124, 58, 237, 0.3);
+  border-radius: 3px;
+  border: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(99, 102, 241, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent;
+}

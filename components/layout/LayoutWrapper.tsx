@@ -4,21 +4,15 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { FloatingDock } from '@/components/ui/floating-dock';
 import FooterSection from '../FooterSection';
-import {
-  IconLogin,
-  IconUserPlus,
-} from '@tabler/icons-react';
 
 const navItems = [
   {
     title: 'Login',
     href: '/login',
-    icon: <IconLogin className="h-4 w-4 text-foreground" />,
   },
   {
     title: 'Register',
     href: '/register',
-    icon: <IconUserPlus className="h-4 w-4 text-foreground" />,
   },
 ];
 

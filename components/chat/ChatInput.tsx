@@ -54,8 +54,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               placeholder={placeholder}
               rows={1}
               disabled={disabled}
-              className="w-full resize-none rounded-xl border border-indigo-700/50 bg-[#302b63]/50 px-4 py-3 pr-12 text-indigo-100 placeholder:text-indigo-400 focus:border-[#7950f2] focus:ring-2 focus:ring-[#7950f2] focus:ring-opacity-50 disabled:bg-gray-500/10 disabled:opacity-50 shadow-sm transition-all duration-200"
-              style={{ minHeight: '48px', maxHeight: '200px' }}
+              className="w-full resize-none rounded-xl border border-indigo-700/50 bg-[#302b63]/50 px-4 py-3 pr-12 text-indigo-100 placeholder:text-indigo-400 focus:border-[#7950f2] focus:ring-2 focus:ring-[#7950f2] focus:ring-opacity-50 disabled:bg-gray-500/10 disabled:opacity-50 shadow-sm transition-all duration-200 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-indigo-600/50 hover:scrollbar-thumb-indigo-500/70"
+              style={{ minHeight: '48px', maxHeight: '200px', overflowY: 'auto' }}
             />
           </div>
           

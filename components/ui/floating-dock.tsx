@@ -4,13 +4,14 @@ import {
   motion,
 } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react"; // Import useRef
+import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export const FloatingDock = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: { title: string; icon?: React.ReactNode; href: string }[];
   className?: string;
 }) => {
   const midIndex = Math.ceil(items.length / 2);
@@ -19,6 +20,7 @@ export const FloatingDock = ({
 
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,16 +53,35 @@ export const FloatingDock = ({
           WebkitBackdropFilter: "blur(16px)"
         }}
       >
-        {firstHalf.map((item) => (
-          <Link href={item.href} key={item.title}>
-            <div className="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-full hover:bg-slate-800/50 cursor-pointer transition-colors">
-              <div className="text-indigo-400 text-sm sm:text-base">
-                {item.icon}
+        {firstHalf.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link href={item.href} key={item.title}>
+              <div className={cn(
+                "flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer transition-all duration-200",
+                isActive 
+                  ? "bg-indigo-600/80 text-white shadow-lg shadow-indigo-500/25" 
+                  : "hover:bg-slate-800/50 text-slate-200"
+              )}>
+                {item.icon && (
+                  <div className={cn(
+                    "text-sm sm:text-base",
+                    isActive ? "text-white" : "text-indigo-400"
+                  )}>
+                    {item.icon}
+                  </div>
+                )}
+                <span className={cn(
+                  "text-xs sm:text-sm font-medium",
+                  item.icon ? "ml-1 sm:ml-2" : "",
+                  isActive ? "text-white font-semibold" : "text-slate-200"
+                )}>
+                  {item.title}
+                </span>
               </div>
-              <span className="text-xs sm:text-sm font-medium text-slate-200 ml-1 sm:ml-2">{item.title}</span>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
         
          <Link href="/">
           <div className="flex items-center justify-center h-10 sm:h-12 w-20 sm:w-24 rounded-xl bg-transparent backdrop-blur-xl border border-white/20 cursor-pointer mx-1 sm:mx-2"
@@ -76,16 +97,35 @@ export const FloatingDock = ({
           </div>
         </Link>
         
-        {secondHalf.map((item) => (
-          <Link href={item.href} key={item.title}>
-            <div className="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-full hover:bg-slate-800/50 cursor-pointer transition-colors">
-              <div className="text-indigo-400 text-sm sm:text-base">
-                {item.icon}
+        {secondHalf.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link href={item.href} key={item.title}>
+              <div className={cn(
+                "flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-full cursor-pointer transition-all duration-200",
+                isActive 
+                  ? "bg-indigo-600/80 text-white shadow-lg shadow-indigo-500/25" 
+                  : "hover:bg-slate-800/50 text-slate-200"
+              )}>
+                {item.icon && (
+                  <div className={cn(
+                    "text-sm sm:text-base",
+                    isActive ? "text-white" : "text-indigo-400"
+                  )}>
+                    {item.icon}
+                  </div>
+                )}
+                <span className={cn(
+                  "text-xs sm:text-sm font-medium",
+                  item.icon ? "ml-1 sm:ml-2" : "",
+                  isActive ? "text-white font-semibold" : "text-slate-200"
+                )}>
+                  {item.title}
+                </span>
               </div>
-              <span className="text-xs sm:text-sm font-medium text-slate-200 ml-1 sm:ml-2">{item.title}</span>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </motion.div>
     </div>
   );

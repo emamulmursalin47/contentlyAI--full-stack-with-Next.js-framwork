@@ -70,18 +70,7 @@ export default function FooterSection() {
             >
               Register
             </Link>
-            <Link 
-              href="/privacy" 
-              className="text-[#a78bfa] hover:text-[#c4b5fd] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7c3aed] focus:ring-offset-2 focus:ring-offset-[#0a0118] rounded-sm px-1 py-1"
-            >
-              Privacy
-            </Link>
-            <Link 
-              href="/terms" 
-              className="text-[#a78bfa] hover:text-[#c4b5fd] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7c3aed] focus:ring-offset-2 focus:ring-offset-[#0a0118] rounded-sm px-1 py-1"
-            >
-              Terms
-            </Link>
+            
           </nav>
           
           {/* Copyright Section */}

@@ -169,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           
           {/* Conversations */}
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="flex-1 overflow-y-auto px-4 pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-indigo-600/30 hover:scrollbar-thumb-indigo-500/50">
             <div className="space-y-5">
               {Object.entries(groupedConversations).map(([date, convs]) => (
                 <div key={date}>
@@ -188,11 +188,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             : 'hover:bg-[#302b63]/30'
                         } ${isCollapsed ? 'p-3' : 'p-3'}`}
                       >
+                        {!isCollapsed && (
+                          <div className="absolute right-2 top-2 z-10">
+                            <div className="flex space-x-1 bg-[#0f0c29]/90 p-1 rounded-md border border-indigo-700/30 shadow-sm">
+                              <button
+                                onClick={(e) => { e.preventDefault(); startEditing(conversation); }}
+                                className="p-1 text-indigo-300 hover:text-[#9775fa] hover:bg-[#302b63]/50 rounded transition-colors"
+                                title="Edit conversation"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (window.confirm('Are you sure?')) {
+                                    onDeleteConversation(conversation.id);
+                                  }
+                                }}
+                                className="p-1 text-indigo-300 hover:text-red-400 hover:bg-red-900/30 rounded transition-colors"
+                                title="Delete conversation"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        
                         <Link
                           href={`/chat/${conversation.id}`}
                           className="block"
                         >
-                          <div className={`flex ${isCollapsed ? 'items-center justify-center' : 'items-center'}`}>
+                          <div className={`flex ${isCollapsed ? 'items-center justify-center' : 'items-center'} ${!isCollapsed ? 'pr-16' : ''}`}>
                             <MessageSquare className={`${isCollapsed ? '' : 'mr-3'} h-4 w-4 text-[#9775fa] flex-shrink-0`} />
                             <div className="flex-1 min-w-0 overflow-hidden">
                               {editingId === conversation.id ? (
@@ -228,30 +254,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             </div>
                           </div>
                         </Link>
-                        
-                        {!isCollapsed && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <div className="flex space-x-1 bg-[#0f0c29] p-1 rounded-md">
-                              <button
-                                onClick={(e) => { e.preventDefault(); startEditing(conversation); }}
-                                className="p-1.5 text-indigo-300 hover:text-[#9775fa] hover:bg-[#302b63]/50 rounded-md transition-colors"
-                              >
-                                <Edit3 className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  if (window.confirm('Are you sure?')) {
-                                    onDeleteConversation(conversation.id);
-                                  }
-                                }}
-                                className="p-1.5 text-indigo-300 hover:text-red-400 hover:bg-red-900/30 rounded-md transition-colors"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>

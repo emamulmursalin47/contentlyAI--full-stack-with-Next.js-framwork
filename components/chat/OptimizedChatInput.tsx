@@ -131,8 +131,9 @@ const OptimizedChatInput = memo<OptimizedChatInputProps>(({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isGenerating}
-          className="flex-1 min-h-[44px] max-h-32 px-4 py-3 bg-[#0f0c29] border border-indigo-700/50 rounded-lg text-indigo-100 placeholder-indigo-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 min-h-[44px] max-h-32 px-4 py-3 bg-[#0f0c29] border border-indigo-700/50 rounded-lg text-indigo-100 placeholder-indigo-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed scrollbar-thin scrollbar-track-transparent scrollbar-thumb-indigo-600/50 hover:scrollbar-thumb-indigo-500/70"
           rows={1}
+          style={{ overflowY: 'auto' }}
         />
         <button
           type="submit"
