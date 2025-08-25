@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <>
       <AuthRedirect />
-      <div className=" sm:pb-24">
+      <div className=" ">
         <HeroSection />
         {/* <AboutPage/>
           <FeaturesSectionDemo/>

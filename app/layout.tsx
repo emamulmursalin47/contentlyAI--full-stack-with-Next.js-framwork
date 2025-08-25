@@ -11,28 +11,23 @@ import { SkipToMainContent } from '@/components/ui/AccessibleComponents';
 // Optimize font loading
 const inter = Inter({ 
   subsets: ['latin'], 
-  display: 'swap', // Better font loading performance
+  display: 'swap',
   preload: true,
 });
 
-// Dynamically import motion to reduce initial bundle size
+// Dynamically import motion with better loading state
 const DynamicMotion = dynamic(
   () => import('framer-motion').then(mod => mod.motion.div),
   { 
-    loading: () => <div className="opacity-0" />,
+    loading: () => <div className="min-h-screen opacity-0" />, // Maintain layout space
     ssr: false 
   }
 );
 
-// Loading component for Suspense boundaries
-const PageLoading = () => (
-  <div className="min-h-screen flex items-center justify-center bg-[#0a0118]">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7c3aed] mx-auto mb-4"></div>
-      <p className="text-[#e2e8f0]">Loading ContentlyAI...</p>
-    </div>
-  </div>
-);
+import LoadingScreen from '@/components/ui/LoadingScreen';
+
+// Improved loading component that maintains layout
+const PageLoading = () => <LoadingScreen />;
 
 export default function RootLayout({
   children,
@@ -88,14 +83,12 @@ export default function RootLayout({
     // Optimize for back/forward cache
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        // Page was restored from back/forward cache
         console.log('Page restored from BF cache');
         window.dispatchEvent(new CustomEvent('bfcache-restore'));
       }
     };
 
     const handlePageHide = (event: PageTransitionEvent) => {
-      // Clean up to improve back/forward cache eligibility
       if (event.persisted) {
         console.log('Page stored in BF cache');
       }
@@ -104,7 +97,6 @@ export default function RootLayout({
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         // Clean up any ongoing operations for better BF cache
-        // Cancel any pending requests, close connections, etc.
       }
     };
 
@@ -115,7 +107,6 @@ export default function RootLayout({
     // Preload critical modules during idle time
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        // Preload modules that will be needed
         import('@radix-ui/react-dialog').catch(() => {});
         import('react-markdown').catch(() => {});
       });
@@ -158,7 +149,6 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <head>
-        {/* Additional head elements for better performance */}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#7c3aed" />
       </head>
@@ -166,11 +156,12 @@ export default function RootLayout({
         <SkipToMainContent />
         <Suspense fallback={<PageLoading />}>
           <LayoutWrapper>
-            <main id="main-content" tabIndex={-1}>
+            <main id="main-content" tabIndex={-1} className="min-h-screen">
               <DynamicMotion
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                className="min-h-screen"
               >
                 {children}
               </DynamicMotion>

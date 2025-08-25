@@ -1,39 +1,15 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-
+import { useState, useEffect } from 'react';
 import { FloatingDock } from '@/components/ui/floating-dock';
-
 import FooterSection from '../FooterSection';
 import {
- 
   IconLogin,
   IconUserPlus,
-
 } from '@tabler/icons-react';
 
 const navItems = [
-  // {
-  //   title: 'Features',
-  //   href: '/features',
-  //   icon: <IconFileText className="h-4 w-4 text-foreground" />,
-  // },
-  // {
-  //   title: 'Pricing',
-  //   href: '/pricing',
-  //   icon: <IconCoin className="h-4 w-4 text-foreground" />,
-  // },
-  // {
-  //   title: 'About',
-  //   href: '/about',
-  //   icon: <IconInfoCircle className="h-4 w-4 text-foreground" />,
-  // },
-  // {
-  //   title: 'Demos',
-  //   href: '/demos',
-  //   icon: <IconBrandDribbble className="h-4 w-4 text-foreground" />,
-  // },
-  
   {
     title: 'Login',
     href: '/login',
@@ -46,7 +22,6 @@ const navItems = [
   },
 ];
 
-
 const protectedRoutes = ['/chat']; 
 
 export default function LayoutWrapper({
@@ -55,18 +30,30 @@ export default function LayoutWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   // Check if the current path starts with any of the protected routes
   const showHeaderAndFooter = !protectedRoutes.some(route => pathname.startsWith(route));
 
+  useEffect(() => {
+    // Delay footer rendering until content is ready
+    const timer = setTimeout(() => {
+      setIsContentLoaded(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex flex-col">
       {showHeaderAndFooter && <FloatingDock items={navItems} />}
       
-      <div className=" ">
+      <div className="flex-1 min-h-0">
         {children}
       </div>
-      {showHeaderAndFooter && <FooterSection />}
+      
+      {/* Only render footer after content is loaded */}
+      {showHeaderAndFooter && isContentLoaded && <FooterSection />}
     </div>
   );
 }

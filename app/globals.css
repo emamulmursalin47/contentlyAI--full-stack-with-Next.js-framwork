@@ -123,3 +123,56 @@
   padding-left: 1rem;
   margin: 1rem 0;
 }
+/* Layout Stability Improvements */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Prevent layout shifts during hydration */
+.layout-stable {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure footer stays at bottom */
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Prevent flash of unstyled content */
+.hydration-safe {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.hydration-safe.mounted {
+  opacity: 1;
+}
+
+/* Smooth transitions for dynamic content */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Prevent cumulative layout shift */
+.prevent-cls {
+  contain: layout style paint;
+}

@@ -67,7 +67,7 @@ export default function HeroSection() {
           <div
             className="relative group transition-transform hover:-translate-y-1 w-full sm:w-auto"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition "></div>
             <Link 
               href="/register" 
               className="relative flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 bg-indigo-900 rounded-xl leading-none w-full"
@@ -80,7 +80,7 @@ export default function HeroSection() {
           <div
             className="relative group transition-transform hover:-translate-y-1 w-full sm:w-auto"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-indigo-600/20 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-indigo-600/20 rounded-xl blur opacity-75 group-hover:opacity-100 transition "></div>
             <Link 
               href="/login" 
               className="relative flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 bg-indigo-900/30 backdrop-blur-sm border border-indigo-700/30 rounded-xl leading-none w-full"

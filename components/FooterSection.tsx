@@ -9,7 +9,23 @@ export default function FooterSection() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
+  // Instead of returning null, return a placeholder with same height
+  if (!mounted) {
+    return (
+      <footer 
+        className="bg-[#0a0118] text-[#e2e8f0] py-6 border-t border-[#4c1d95] opacity-0"
+        role="contentinfo"
+        aria-label="Site footer"
+        style={{ height: '120px' }} // Approximate footer height
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between h-full">
+            {/* Placeholder content */}
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer 
