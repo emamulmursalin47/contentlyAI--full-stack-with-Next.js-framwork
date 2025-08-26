@@ -253,7 +253,7 @@ export async function POST(
     }
 
     // Validate model
-    const validModels = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma-7b-it', 'deepseek-r1-distill-llama-70b'];
+    const validModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it', 'deepseek-r1-distill-llama-70b', 'openai/gpt-oss-120b', 'qwen/qwen3-32b'];
     if (!validModels.includes(model)) {
       const response = NextResponse.json({ error: 'Invalid model specified' }, { status: 400 });
       return setCorsHeaders(response);

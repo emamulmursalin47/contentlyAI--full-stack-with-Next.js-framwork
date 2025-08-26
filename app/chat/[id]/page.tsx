@@ -23,9 +23,11 @@ interface RawMessage {
 
 const LLM_MODELS = [
   { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (Fast)', description: 'Quick responses, great for most tasks' },
-  { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b', description: 'Excellent for creative writing' },
-  { value: 'qwen/qwen3-32b', label: 'qwen/qwen3-32b', description: 'Balanced performance and speed' },
-  { value: 'deepseek-r1-distill-llama-70b', label: 'DeepSeek R1 Distill Llama 70B', description: 'Optimized for complex tasks' },
+  { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (Versatile)', description: 'More powerful, versatile responses' },
+  { value: 'openai/gpt-oss-120b', label: 'OpenAI GPT OSS 120B', description: 'Excellent for creative writing and complex reasoning' },
+  { value: 'qwen/qwen3-32b', label: 'Qwen 3 32B', description: 'Balanced performance and speed' },
+  { value: 'gemma2-9b-it', label: 'Gemma 2 9B', description: 'Efficient and reliable' },
+  { value: 'deepseek-r1-distill-llama-70b', label: 'DeepSeek R1 Distill Llama 70B', description: 'Optimized for complex reasoning tasks' },
 ] as const;
 
 const SOCIAL_PLATFORMS = [

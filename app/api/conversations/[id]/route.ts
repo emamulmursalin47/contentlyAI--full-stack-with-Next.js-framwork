@@ -154,7 +154,7 @@ export async function PUT(
 
     // Validate and set llmModel
     if (llmModel !== undefined) {
-      const validModels = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma-7b-it', 'deepseek-r1-distill-llama-70b'];
+      const validModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it', 'deepseek-r1-distill-llama-70b', 'openai/gpt-oss-120b', 'qwen/qwen3-32b'];
       if (!validModels.includes(llmModel)) {
         const response = NextResponse.json(
           { error: 'Invalid LLM model' },

@@ -69,7 +69,7 @@ const conversationSchema = new mongoose.Schema({
   },
   llmModel: {
     type: String,
-    enum: ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma-7b-it', 'deepseek-r1-distill-llama-70b'],
+    enum: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it', 'deepseek-r1-distill-llama-70b', 'openai/gpt-oss-120b', 'qwen/qwen3-32b'],
     default: 'llama-3.1-8b-instant',
   },
   createdAt: { type: Date, default: Date.now },
@@ -104,7 +104,7 @@ const userSettingsSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true, ref: 'User' },
   defaultLlmModel: { 
     type: String, 
-    enum: ['llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma-7b-it', 'deepseek-r1-distill-llama-70b'], 
+    enum: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it', 'deepseek-r1-distill-llama-70b', 'openai/gpt-oss-120b', 'qwen/qwen3-32b'], 
     default: 'llama-3.1-8b-instant' 
   },
   defaultPlatform: { 
